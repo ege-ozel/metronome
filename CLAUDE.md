@@ -36,6 +36,12 @@ A precise metronome that runs as a web app, an offline PWA (GitHub Pages, `/metr
 
 (`audio-engine.md`, `visualizers.md`, and `sounds.md` are not written yet — use the matching spec sections instead.)
 
+## "The four theme colours"
+
+When the user says "dört tema rengi" / the four theme colours, they mean exactly: **teal** `#4fb894`,
+**chrome** `#d8dce4`, **blue** `#58a6ff` and the light theme's knob orange `#ee9448` (a lighter
+orange than amber). The easter egg (`index.html` `--boot-*`, `src/ui/bootBranches.ts`) is built on them.
+
 ## Rules that are easy to break
 
 - `setTimeout`/`setInterval`/`requestAnimationFrame` never decide **when** a click sounds. Only `AudioContext.currentTime` + `source.start(time)` via the look-ahead `Scheduler` does. Beat times are accumulated (`next += 60 / bpm`), never re-measured.

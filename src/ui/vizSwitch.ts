@@ -3,42 +3,39 @@ import type { Settings } from '../state/settings';
 import type { Store } from '../state/store';
 import { byId } from './dom';
 
+type VizTab = 'circular' | 'linear' | 'poly';
+
+/** The three top-right tabs. Circle and Line choose how the standard beat is drawn; Poly is the
+ *  polyrhythm mode (the same switch as the Signature dialog's), which only has a circular view. */
 export function mountVizSwitch({ store }: { store: Store<Settings> }): void {
   const stage = byId('stage');
   const selector = document.querySelector<HTMLElement>('.seg');
   if (!selector) throw new Error('Missing visualizer selector.');
   const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.seg-btn[data-viz]'));
-  const thumb = selector.querySelector<HTMLElement>('.seg-thumb');
-  const polyTag = selector.querySelector<HTMLElement>('.seg-mode');
-  if (!thumb || !polyTag) throw new Error('Missing visualizer selector elements.');
-  // The whole pill acts as a single toggle: tapping either side flips the visualizer, even
-  // tapping the side that's already active — no need to aim for the exact other label.
-  const toggle = () =>
-    store.set({ visualizer: store.get().visualizer === 'linear' ? 'circular' : 'linear' });
+
+  const select = (tab: VizTab) => {
+    const polyrhythm = store.get().polyrhythm;
+    if (tab === 'poly') {
+      store.set({ polyrhythm: { ...polyrhythm, enabled: true } });
+    } else {
+      // Leaving polyrhythm for a view also sets that view, so Line is reachable in one tap.
+      store.set({ visualizer: tab, polyrhythm: { ...polyrhythm, enabled: false } });
+    }
+  };
   for (const button of buttons) {
-    button.addEventListener('click', toggle);
+    button.addEventListener('click', () => select(button.dataset.viz as VizTab));
   }
-  // While polyrhythm is on, the pill becomes its tag: the name opens the Signature dialog (where
-  // the mode lives), the ✕ goes straight back to standard mode and the saved Circle/Line view.
-  byId('polyTagBtn').addEventListener('click', () => byId('signatureBtn').click());
-  byId('polyExitBtn').addEventListener('click', () =>
-    store.set({ polyrhythm: { ...store.get().polyrhythm, enabled: false } }),
-  );
+
   const render = (s: Settings) => {
-    // Polyrhythm only has a circular view, so the switch is locked to Circle while it's on. The
-    // saved choice is left alone, so turning polyrhythm off brings Line back if it was picked.
     const poly = s.polyrhythm.enabled;
-    const shown = poly ? 'circular' : s.visualizer;
-    stage.dataset.viz = shown;
+    // Polyrhythm only has a circular view. The saved Circle/Line choice is left alone, so
+    // turning polyrhythm off brings Line back if it was picked.
+    stage.dataset.viz = poly ? 'circular' : s.visualizer;
+    const current: VizTab = poly ? 'poly' : s.visualizer;
     selector.classList.toggle('is-polyrhythm', poly);
-    selector.setAttribute('role', poly ? 'group' : 'radiogroup');
-    selector.setAttribute('aria-label', t(poly ? 'sigDialog.modePolyrhythm' : 'viz.ariaLabel'));
-    thumb.hidden = poly;
-    polyTag.hidden = !poly;
+    selector.setAttribute('aria-label', t('viz.ariaLabel'));
     for (const button of buttons) {
-      button.setAttribute('aria-checked', String(button.dataset.viz === shown));
-      button.disabled = poly;
-      button.hidden = poly;
+      button.setAttribute('aria-checked', String(button.dataset.viz === current));
     }
   };
   render(store.get());

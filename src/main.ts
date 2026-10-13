@@ -610,12 +610,21 @@ byId('titleBtn').addEventListener('click', () => byId('menuBtn').click());
 
 // Tapping the boot-knob mirrors the real knob's tap-to-start/stop: the beat circle appears
 // around it and spins, and the knob pulses, only while "playing."
-// While "playing" it also loops the 142 BPM easter-egg track (public/boot-loop.mp3, 16 bars),
+// While "playing" it also loops the 140 BPM easter-egg track (public/boot-loop.mp3),
 // fetched and decoded only on the first tap and played through its own throwaway AudioContext so
 // the metronome engine is never touched.
+//
+// Everything visual is locked to that track: index.html's --beat is 60s / 140, every CSS animation
+// is a whole number of beats, and the knob's pin is steered (below) to point straight up on
+// beats 1, 5, 9... of the loop.
+const BOOT_BPM = 140;
+const BOOT_BEAT = 60 / BOOT_BPM;
 let bootLoopCtx: AudioContext | null = null;
 let bootLoopSource: AudioBufferSourceNode | null = null;
 let bootLoopBuffer: Promise<AudioBuffer> | null = null;
+let bootSeamTimer = 0;
+let bootSpinRamp = 0;
+let bootSpinLock = 0;
 
 function stopBootLoop(): void {
   try {
@@ -624,6 +633,8 @@ function stopBootLoop(): void {
     // Already stopped.
   }
   bootLoopSource = null;
+  window.clearTimeout(bootSeamTimer);
+  cancelAnimationFrame(bootSpinLock);
   // Release the audio output: a second context left running can get in the way of the
   // metronome's own resume() on Android. startBootLoop() resumes it.
   bootLoopCtx?.suspend().catch(() => {});
@@ -649,26 +660,75 @@ async function startBootLoop(): Promise<void> {
     const gain = ctx.createGain();
     gain.gain.value = 0.7;
     source.connect(gain).connect(ctx.destination);
-    source.start();
+    // Started at a known audio-clock time, so the visuals can be phase-locked to it.
+    const startAt = ctx.currentTime + 0.05;
+    source.start(startAt);
     bootLoopSource = source;
+    const latency = Math.min(0.3, (ctx.baseLatency || 0) + (ctx.outputLatency || 0));
+    const loopLength = buffer.duration;
+    // .boot-synced starts every beat-based CSS animation, when the first beat is heard.
+    window.setTimeout(
+      () => {
+        if (bootLoopSource === source) bootLoader?.classList.add('boot-synced');
+      },
+      (startAt - ctx.currentTime + latency) * 1000,
+    );
+    lockBootSpin(
+      () => (((ctx.currentTime - latency - startAt) % loopLength) + loopLength) % loopLength,
+    );
+    keepBootBeatOnTheGrid(ctx, source, startAt, loopLength, latency);
   } catch {
     // The loop is a bonus; the animation works without it. Retry the load on the next tap.
     bootLoopBuffer = null;
+    if (bootLoader?.classList.contains('boot-playing')) bootLoader.classList.add('boot-synced');
   }
 }
 
-// The knob turns lazily at rest (20 beats a turn) and eases up to one turn per 4 beats of the
-// 142 BPM loop (5x) while it plays. The CSS animation's playbackRate carries the change, so the
-// angle never jumps.
+/** The track is not a whole number of beats long, so at every loop restart the free-running
+ *  beat animations are a little ahead of the music. Shifts them back by that remainder then
+ *  (tens of milliseconds, invisible), keeping the pulse and branches on the beat indefinitely.
+ *  The spinning knob is steered separately by lockBootSpin. */
+function keepBootBeatOnTheGrid(
+  ctx: AudioContext,
+  source: AudioBufferSourceNode,
+  startAt: number,
+  loopLength: number,
+  latency: number,
+): void {
+  const remainder = loopLength - Math.round(loopLength / BOOT_BEAT) * BOOT_BEAT;
+  if (Math.abs(remainder) < 0.001) return;
+  const spin = bootSpinAnimation();
+  const schedule = (loop: number): void => {
+    const wait = startAt + loop * loopLength + latency - ctx.currentTime;
+    bootSeamTimer = window.setTimeout(
+      () => {
+        if (bootLoopSource !== source) return;
+        for (const a of bootLoader?.getAnimations({ subtree: true }) ?? []) {
+          if (a === spin || !(a instanceof CSSAnimation) || a.currentTime === null) continue;
+          a.currentTime = Number(a.currentTime) - remainder * 1000 * a.playbackRate;
+        }
+        schedule(loop + 1);
+      },
+      Math.max(0, wait * 1000),
+    );
+  };
+  schedule(1);
+}
+
+// The knob turns lazily at rest (20 beats a turn) and eases up to one turn per 4 beats (5x) while
+// it plays. The CSS animation's playbackRate carries the change, so the angle never jumps.
 const BOOT_SPIN_PLAYING_RATE = 5;
 const BOOT_SPIN_RAMP_MS = 900;
-let bootSpinRamp = 0;
 
-function rampBootSpin(target: number): void {
-  const spin = document
+function bootSpinAnimation(): Animation | undefined {
+  return document
     .querySelector('.boot-knob-spin')
     ?.getAnimations?.()
     .find((a) => a.effect !== null);
+}
+
+function rampBootSpin(target: number): void {
+  const spin = bootSpinAnimation();
   if (!spin) return;
   cancelAnimationFrame(bootSpinRamp);
   const from = spin.playbackRate;
@@ -680,6 +740,34 @@ function rampBootSpin(target: number): void {
     if (t < 1) bootSpinRamp = requestAnimationFrame(step);
   };
   bootSpinRamp = requestAnimationFrame(step);
+}
+
+/** Steers the knob so its pin points straight up on beats 1, 5, 9... of the loop (one turn per
+ *  4 beats). A proportional controller on the playback rate: the angle error decays smoothly in
+ *  about a second and a half, with the speed never straying more than 40% from nominal. */
+function lockBootSpin(loopTime: () => number): void {
+  const spin = bootSpinAnimation();
+  if (!spin) return;
+  cancelAnimationFrame(bootSpinRamp);
+  cancelAnimationFrame(bootSpinLock);
+  const turnMs = Number(spin.effect?.getTiming().duration);
+  let rate = spin.playbackRate;
+  let last = performance.now();
+  const step = (now: number): void => {
+    if (!bootLoader?.classList.contains('boot-playing')) return;
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    const want = (loopTime() / (4 * BOOT_BEAT)) % 1;
+    const have = (Number(spin.currentTime) % turnMs) / turnMs;
+    let error = want - have;
+    error -= Math.round(error);
+    const target = BOOT_SPIN_PLAYING_RATE * (1 + Math.max(-0.4, Math.min(0.4, 3 * error)));
+    const maxStep = 8 * dt; // rate units per second: the hand-over from the slow idle spin
+    rate += Math.max(-maxStep, Math.min(maxStep, target - rate));
+    spin.playbackRate = rate;
+    bootSpinLock = requestAnimationFrame(step);
+  };
+  bootSpinLock = requestAnimationFrame(step);
 }
 
 // The branch drawing is a lazy chunk: nothing of it exists until the knob is first tapped.
@@ -700,6 +788,8 @@ function startBootBranches(): void {
 
 function setBootPlaying(playing: boolean): void {
   bootLoader?.classList.toggle('boot-playing', playing);
+  if (!playing) bootLoader?.classList.remove('boot-synced');
+  cancelAnimationFrame(bootSpinLock);
   rampBootSpin(playing ? BOOT_SPIN_PLAYING_RATE : 1);
   if (playing) {
     void startBootLoop();

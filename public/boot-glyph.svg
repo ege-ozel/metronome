@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="6 6 500 500">
+  <title>Play</title>
   <!-- Play glyph in polished green metal: same rounded triangle, lit from the top right like the knob. -->
   <defs>
     <mask id="playShape" maskUnits="userSpaceOnUse" x="224" y="214" width="78" height="84">

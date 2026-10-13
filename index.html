@@ -44,55 +44,114 @@
         height: 100%;
         overflow: visible;
       }
-      /* Eight branches are drawn out of the knob only while it plays (src/ui/bootBranches.ts
-         plans the paths). One cycle is 12 beats at 142 BPM; --i staggers the branches a beat
+      /* Eight branches are drawn out of the knob only while it plays, once the loop is audible
+         (main.ts adds .boot-synced as the audio starts, so every animation here begins on beat 0) (src/ui/bootBranches.ts
+         plans the paths). One cycle is 12 beats at 140 BPM; --i staggers the branches a beat
          apart. Outside .boot-playing no animation exists, so the idle cost is zero. */
       #bootLoader {
-        --beat: 0.4225s;
+        --beat: calc(60s / 140); /* 140 BPM, the tempo of public/boot-loop.mp3 (BOOT_BPM in main.ts) */
       }
+      /* The four theme colours (teal, chrome, blue and the light theme's orange) are the palette
+         of the whole easter egg: the branches, their nodes and the knob's moving glow. */
+      #bootLoader {
+        --boot-teal: #4fb894;
+        --boot-orange: #ee9448;
+        --boot-chrome: #d8dce4;
+        --boot-blue: #58a6ff;
+      }
+      /* Each branch is three strokes of one path: two wide translucent ones in the "glow" colour
+         (a cheap stand-in for a blur) under the thin main line. src/ui/bootBranches.ts
+         picks --line and --glow per branch; the node takes the glow colour. */
       .boot-line {
         fill: none;
-        stroke: #4fb894;
-        stroke-opacity: 0.6;
+        stroke: var(--line, var(--boot-teal));
+        stroke-opacity: 0.7;
         stroke-width: 2;
         stroke-linejoin: round;
         stroke-dasharray: 1 2;
         stroke-dashoffset: 1;
       }
+      .boot-line.boot-glow-wide {
+        stroke: var(--glow, var(--boot-teal));
+        stroke-opacity: 0.14;
+        stroke-width: 10;
+      }
+      .boot-line.boot-glow-mid {
+        stroke: var(--glow, var(--boot-teal));
+        stroke-opacity: 0.32;
+        stroke-width: 4.5;
+      }
+      .boot-single .boot-glow-wide,
+      .boot-single .boot-glow-mid {
+        display: none;
+      }
       .boot-node {
-        fill: url(#bootNodeGlow);
         transform-box: fill-box;
         transform-origin: center;
         transform: scale(0);
       }
-      #bootLoader.boot-playing .boot-branch {
+      /* The knob's glow while it plays: four colour blobs (plain radial gradients, no blur) that
+         step round the knob one position every two beats. At rest the baked mint halo of the
+         splash art is all there is. */
+      .boot-glow {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+      }
+      .boot-glow i {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 66%;
+        height: 66%;
+        margin: -33% 0 0 -33%;
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--c) 85%, transparent) 0%, transparent 70%);
+      }
+      .boot-glow i:nth-child(1) { --c: var(--boot-teal); transform: translate(-44%, -44%); }
+      .boot-glow i:nth-child(2) { --c: var(--boot-orange); transform: translate(44%, -44%); }
+      .boot-glow i:nth-child(3) { --c: var(--boot-blue); transform: translate(44%, 44%); }
+      .boot-glow i:nth-child(4) { --c: var(--boot-chrome); transform: translate(-44%, 44%); }
+      #bootLoader.boot-playing .boot-glow {
+        opacity: 1;
+      }
+      #bootLoader.boot-synced .boot-glow {
+        will-change: transform;
+        animation: bootGlowShift calc(var(--beat) * 8) steps(4, end) infinite;
+      }
+      @keyframes bootGlowShift {
+        to { transform: rotate(360deg); }
+      }
+      #bootLoader.boot-synced .boot-branch {
         animation: bootBranchFade calc(var(--beat) * 12) linear infinite;
         animation-delay: calc(var(--beat) * var(--i));
       }
-      #bootLoader.boot-playing .boot-line {
+      #bootLoader.boot-synced .boot-line {
         animation: bootBranchLine calc(var(--beat) * 12) linear infinite;
         animation-delay: calc(var(--beat) * var(--i));
       }
-      #bootLoader.boot-playing .boot-node {
+      #bootLoader.boot-synced .boot-node {
         animation: bootBranchNode calc(var(--beat) * 12) ease-out infinite;
         animation-delay: calc(var(--beat) * var(--i));
       }
       @keyframes bootBranchLine {
         0% { stroke-dashoffset: 1; }
-        14%, 100% { stroke-dashoffset: 0; }
+        16.667%, 100% { stroke-dashoffset: 0; }
       }
       @keyframes bootBranchNode {
-        0%, 13% { transform: scale(0); }
-        19% { transform: scale(1.35); }
-        24%, 100% { transform: scale(1); }
+        0%, 16.667% { transform: scale(0); }
+        20.833% { transform: scale(1.35); }
+        25%, 100% { transform: scale(1); }
       }
       /* Starts and ends fully transparent: the three animations of a branch wrap on the same
          instant, but the compositor and main thread can disagree by a frame, and a branch that
          is opaque at the wrap would flash its old line for that frame. */
       @keyframes bootBranchFade {
         0% { opacity: 0; }
-        2%, 78% { opacity: 1; }
-        92%, 100% { opacity: 0; }
+        4.167%, 75% { opacity: 1; }
+        91.667%, 100% { opacity: 0; }
       }
       /* The Android launch splash, exactly: the same art (public/boot-knob.svg and
          boot-glyph.svg are built from icon.svg by scripts/boot-knob.cjs, halo baked in) at the
@@ -109,7 +168,7 @@
         position: absolute;
         inset: 0;
         /* Lazy at rest: 20 beats a turn. While playing, main.ts raises the playback rate to 5x
-           so it turns once per 4 beats, in time with the 142 BPM loop. A transform animation
+           so it turns once per 4 beats, in time with the 140 BPM loop. A transform animation
            on its own layer: the GPU re-composites one cached texture, nothing is repainted. */
         animation: bootSpin calc(var(--beat) * 20) linear infinite;
         will-change: transform;
@@ -122,8 +181,8 @@
         user-select: none;
         -webkit-user-drag: none;
       }
-      #bootLoader.boot-playing .boot-knob img {
-        animation: bootKnobBeat 0.4225s ease-out infinite;
+      #bootLoader.boot-synced .boot-knob img {
+        animation: bootKnobBeat var(--beat) ease-out infinite;
       }
       /* Opacity 0 doesn't stop a running CSS animation on its own: without this the spin would
          keep ticking for the entire life of the tab. main.ts's setBootLoaderHidden() toggles it. */
@@ -235,18 +294,10 @@
   <body>
     <div id="bootLoader" aria-hidden="true">
       <div class="boot-stage">
-        <svg id="bootBranches" viewBox="-100 -100 200 200" aria-hidden="true">
-          <defs>
-            <radialGradient id="bootNodeGlow">
-              <stop offset="0" stop-color="#9af0d2" />
-              <stop offset="0.4" stop-color="#4fb894" />
-              <stop offset="0.46" stop-color="#4fb894" stop-opacity="0.55" />
-              <stop offset="1" stop-color="#4fb894" stop-opacity="0" />
-            </radialGradient>
-          </defs>
-        </svg>
+        <svg id="bootBranches" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
       </div>
       <div class="boot-knob">
+        <div class="boot-glow"><i></i><i></i><i></i><i></i></div>
         <div class="boot-knob-spin"><img src="/boot-knob.svg" alt="" draggable="false" /></div>
         <img src="/boot-glyph.svg" alt="" draggable="false" />
       </div>
@@ -265,10 +316,7 @@
           <span class="seg-thumb" aria-hidden="true"></span>
           <button type="button" role="radio" class="seg-btn" data-viz="circular" aria-checked="true" data-i18n="viz.circle">Circle</button>
           <button type="button" role="radio" class="seg-btn" data-viz="linear" aria-checked="false" data-i18n="viz.line">Line</button>
-          <span class="seg-mode" hidden>
-            <button type="button" id="polyTagBtn" class="seg-mode-label" data-i18n="sigDialog.modePolyrhythm" aria-haspopup="dialog" aria-controls="signatureDialog">Polyrhythm</button>
-            <button type="button" id="polyExitBtn" class="seg-mode-exit" data-i18n-aria-label="poly.exitAriaLabel" aria-label="Back to standard mode">✕</button>
-          </span>
+          <button type="button" role="radio" class="seg-btn" data-viz="poly" aria-checked="false" data-i18n="viz.poly">Poly</button>
         </div>
       </header>
 

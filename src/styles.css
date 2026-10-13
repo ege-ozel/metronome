@@ -592,7 +592,7 @@ output {
   top: 3px;
   bottom: 3px;
   left: 3px;
-  width: calc(50% - 3px);
+  width: calc((100% - 6px) / 3);
   border-radius: 999px;
   background: linear-gradient(180deg, var(--panel), var(--panel-lo));
   box-shadow:
@@ -604,9 +604,12 @@ output {
 .seg:has(.seg-btn[data-viz="linear"][aria-checked="true"]) .seg-thumb {
   transform: translateX(100%);
 }
+.seg:has(.seg-btn[data-viz="poly"][aria-checked="true"]) .seg-thumb {
+  transform: translateX(200%);
+}
+/* Polyrhythm mode rings the whole pill in the four theme colours. The thicker border takes the
+   place of the padding, so the tabs and the thumb stay exactly where they are. */
 .seg.is-polyrhythm {
-  width: auto;
-  min-width: 0;
   padding: 1px;
   border: 3px solid transparent;
   background:
@@ -614,32 +617,11 @@ output {
     conic-gradient(from 0deg, #4fb894, #d99a3f, #58a6ff, #b0b4bc, #4fb894) border-box;
   box-shadow: 0 0 8px var(--select-soft);
 }
-.seg-mode {
-  display: flex;
-  align-items: center;
-}
-.seg-mode-label {
-  border: 0;
-  background: transparent;
-  padding: 6px 4px 6px 14px;
-  color: var(--select);
-  font: inherit;
-  font-size: 13px;
-  text-align: center;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.seg-mode-exit {
-  border: 0;
-  background: transparent;
-  padding: 6px 12px 6px 8px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-}
-.seg-mode-exit:hover {
-  color: var(--select);
+.seg.is-polyrhythm .seg-thumb {
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  width: calc((100% - 2px) / 3);
 }
 .seg-btn {
   position: relative;
@@ -647,7 +629,7 @@ output {
   flex: 1;
   border: 0;
   background: transparent;
-  padding: 6px 14px;
+  padding: 6px 4px;
   border-radius: 999px;
   font-size: 13px;
   text-align: center;
@@ -3180,10 +3162,6 @@ html.depth-25d .knob {
   box-shadow:
     0 2px 8px rgb(60 50 30 / 0.12),
     0 0 10px rgb(79 184 148 / 0.12);
-}
-:root[data-theme="light"] .seg-mode-label {
-  color: #3b382b;
-  font-weight: 600;
 }
 :root[data-theme="light"] .header-btn,
 :root[data-theme="light"] .square-btn,

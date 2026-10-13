@@ -12,7 +12,7 @@ work listed below is **committed and pushed**; it still awaits the user's phone 
   slowly spinning as the loading indicator, blank dark brushed-metal LCD matching the in-app knob
   (regenerated from `knob.ts` lcdStops), four-colour box-shadow (teal left, light-theme orange
   `#ee9448` right, chrome bottom-left, blue bottom-right). No fade; no live-knob snapshot. Tapping
-  the knob plays the 142 BPM loop and shows the spinning ring around it; tapping outside closes
+  the knob plays the 140 BPM loop and shows the spinning ring around it; tapping outside closes
   the title-button preview.
 - **Audio start hang** (`audioEngine.ts`, `transport.ts`): suspend only 45 s after stop; silent
   unlock `play()` not awaited; `ensureRunning()` retries on a fresh AudioContext after a 1.5 s
@@ -44,6 +44,13 @@ work listed below is **committed and pushed**; it still awaits the user's phone 
   loader art is 216px on #141416 like the splash (CENTER scale type). No box-shadow. Branch fade
   starts/ends at opacity 0 (suspected wrap-frame flash); branches reach 80% of the way to each edge.
   Rerun the script after editing `icon.svg`.
+- **Easter egg tempo = 140 BPM** (user-confirmed; onset analysis agrees, the file is 63.1 beats / 27.042 s
+  long). `--beat: calc(60s / 140)` in index.html, `BOOT_BPM` in main.ts. Visuals start on the first
+  heard beat (`.boot-synced`), animations are shifted back by the 42 ms loop remainder each loop,
+  and the knob pin is steered to point up on beats 1, 5, 9... (P-controller on playbackRate).
+- **Top-right tabs are now Circle | Line | Poly** (`vizSwitch.ts`): Poly = polyrhythm mode (same
+  setting as the Signature dialog); Circle/Line also switch polyrhythm off. The old Polyrhythm tag
+  with ✕ is gone. App rename leaning Orbit (title "Orbit: Metronome" on Play, "Orbit" in-app).
 - **Open questions to the user**: what "title ortak olmalı with the menu button" means if not
   "opens the menu"; app rename — suggested Orbit (recommended), TempoDial, Kadran, Pulse Ring,
   Ritmo; check Play Store availability once picked. Boot animation will be revised later.

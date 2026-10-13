@@ -16,6 +16,10 @@ const MIN_SEGMENT = 16;
 const MAX_SEGMENT = 120;
 const MAX_TRIES = 40;
 const TURNS = [-2, -1, 1, 2];
+/** Share of branches drawn as one plain colour, without the translucent glow strokes. */
+const SINGLE_COLOUR_CHANCE = 0.4;
+/** The four theme colours (CSS custom properties on #bootLoader, see index.html). */
+const PALETTE = ['--boot-teal', '--boot-orange', '--boot-chrome', '--boot-blue'];
 
 export interface Pt {
   x: number;
@@ -148,7 +152,7 @@ const pathData = (pts: Pt[]): string =>
 
 interface Branch {
   g: SVGGElement;
-  path: SVGPathElement;
+  paths: SVGPathElement[];
   node: SVGCircleElement;
   pts: Pt[];
 }
@@ -161,19 +165,46 @@ export function createBootBranches(svg: SVGSVGElement, knob: HTMLElement): { res
     [staggers[i], staggers[j]] = [staggers[j], staggers[i]];
   }
 
+  // One radial gradient per palette colour for the nodes: a bright core, a solid body and a soft
+  // halo, so a node's glow costs a gradient fill rather than a blur filter.
+  const defs = document.createElementNS(SVG_NS, 'defs');
+  PALETTE.forEach((name, i) => {
+    const gradient = document.createElementNS(SVG_NS, 'radialGradient');
+    gradient.setAttribute('id', `bootNode${i}`);
+    const stops: [string, string, string][] = [
+      ['0', `color-mix(in srgb, var(${name}), white 45%)`, '1'],
+      ['0.4', `var(${name})`, '1'],
+      ['0.46', `var(${name})`, '0.55'],
+      ['1', `var(${name})`, '0'],
+    ];
+    for (const [offset, color, opacity] of stops) {
+      const stop = document.createElementNS(SVG_NS, 'stop');
+      stop.setAttribute('offset', offset);
+      stop.style.stopColor = color;
+      stop.style.stopOpacity = opacity;
+      gradient.append(stop);
+    }
+    defs.append(gradient);
+  });
+  svg.append(defs);
+
   const branches: Branch[] = staggers.map((stagger) => {
     const g = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('class', 'boot-branch');
     g.style.setProperty('--i', String(stagger));
-    const path = document.createElementNS(SVG_NS, 'path');
-    path.setAttribute('class', 'boot-line');
-    path.setAttribute('pathLength', '1');
+    // Two wide translucent strokes under the thin main line fake the glow of a blur.
+    const paths = ['boot-glow-wide', 'boot-glow-mid', ''].map((extra) => {
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('class', `boot-line ${extra}`.trim());
+      path.setAttribute('pathLength', '1');
+      return path;
+    });
     const node = document.createElementNS(SVG_NS, 'circle');
     node.setAttribute('class', 'boot-node');
     node.setAttribute('r', String(NODE_RADIUS * 2.2));
-    g.append(path, node);
+    g.append(...paths, node);
     svg.append(g);
-    return { g, path, node, pts: [] };
+    return { g, paths, node, pts: [] };
   });
 
   let context: Omit<PlanContext, 'others'> | null = null;
@@ -205,7 +236,20 @@ export function createBootBranches(svg: SVGSVGElement, knob: HTMLElement): { res
       .filter((_, i) => i !== index && branches[i].pts.length)
       .map((b) => b.pts);
     branch.pts = planBranch(index, { ...context, others });
-    branch.path.setAttribute('d', pathData(branch.pts));
+    const d = pathData(branch.pts);
+    for (const path of branch.paths) path.setAttribute('d', d);
+    // New random colours every cycle. Most branches are two-toned (the main line, plus a
+    // different colour for the glow strokes and the node); some are plain single-colour lines
+    // with no glow strokes, node in the line's own colour.
+    const line = Math.floor(Math.random() * PALETTE.length);
+    const single = Math.random() < SINGLE_COLOUR_CHANCE;
+    const glow = single
+      ? line
+      : (line + 1 + Math.floor(Math.random() * (PALETTE.length - 1))) % PALETTE.length;
+    branch.g.classList.toggle('boot-single', single);
+    branch.g.style.setProperty('--line', `var(${PALETTE[line]})`);
+    branch.g.style.setProperty('--glow', `var(${PALETTE[glow]})`);
+    branch.node.style.fill = `url(#bootNode${glow})`;
     const end = branch.pts[3];
     branch.node.setAttribute('cx', end.x.toFixed(1));
     branch.node.setAttribute('cy', end.y.toFixed(1));
