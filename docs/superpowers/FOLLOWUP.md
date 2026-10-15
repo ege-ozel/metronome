@@ -74,7 +74,7 @@ All 275 tests pass; type-check and lint are clean.
   `npx tauri icon public/icon.svg`, `node scripts/android-icons.cjs`. The script reproduces the
   installed build's 18 Android/Play/splash files byte-for-byte. Bubblewrap project regeneration
   would overwrite `ic_launcher.xml` and the icons: re-run the script afterwards.
-- Debug builds install next to the Play app as `com.psymore.metronome.test` ("Metronome Test",
+- Debug builds install next to the Play app as `com.egeozel.metronome.test` ("Metronome Test",
   `android/app/build.gradle`). The current debug build (19:51) is on the test phone.
 
 ### App icon: what we learned on the test phone

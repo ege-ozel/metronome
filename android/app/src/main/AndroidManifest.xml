@@ -20,9 +20,8 @@
      application, the package attribute will need to reflect the correct path in order to use
      the abbreviated format. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.psymore.metronome">
+    package="com.egeozel.metronome">
 
-    
     
 
     
@@ -178,13 +177,14 @@
             android:enabled="@bool/enableNotification"
             android:exported="@bool/enableNotification">
 
+            
+
             <intent-filter>
                 <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </service>
 
-        
         
 
         

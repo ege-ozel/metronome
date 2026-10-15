@@ -21,11 +21,11 @@ plugins {
 }
 
 def twaManifest = [
-    applicationId: 'com.psymore.metronome',
+    applicationId: 'com.egeozel.metronome',
     hostName: 'metronome-delta-gold.vercel.app', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
-    name: 'Metronome', // The application name.
-    launcherName: 'Metronome', // The name shown on the Android Launcher.
+    name: 'Chronobeat: Metronome', // The application name.
+    launcherName: 'Chronobeat', // The name shown on the Android Launcher.
     themeColor: '#141416', // The color used for the status bar.
     themeColorDark: '#000000', // The color used for the dark status bar.
     navigationColor: '#000000', // The color used for the navigation bar.
@@ -52,9 +52,9 @@ def twaManifest = [
 
 android {
     compileSdkVersion 36
-    namespace "com.psymore.metronome"
+    namespace "com.egeozel.metronome"
     defaultConfig {
-        applicationId "com.psymore.metronome"
+        applicationId "com.egeozel.metronome"
         minSdkVersion 21
         targetSdkVersion 36
         versionCode 1
@@ -155,7 +155,7 @@ android {
         // with the auto-generated debug key: for trying icons on a phone without the release key.
         debug {
             applicationIdSuffix ".test"
-            resValue "string", "launcherName", "Metronome Test"
+            resValue "string", "launcherName", "Chronobeat Test"
         }
         release {
             minifyEnabled true

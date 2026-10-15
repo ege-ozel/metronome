@@ -12,7 +12,7 @@ release — not a design document.
 | Dev server | `npm run dev` | `http://localhost:5173` |
 | GitHub Pages PWA | `GITHUB_PAGES=true npm run build` → `dist/` | `https://<user>.github.io/metronome/` |
 | Tauri Windows app | `npm run tauri build` | NSIS installer in `src-tauri/target/release/bundle/nsis/` |
-| Android TWA | Vercel hosts the PWA; Bubblewrap wraps it | Google Play, package `com.psymore.metronome` |
+| Android TWA | Vercel hosts the PWA; Bubblewrap wraps it | Google Play, package `com.egeozel.metronome` |
 
 The GitHub Pages build sets `base: '/metronome/'` (`vite.config.ts`) because it
 shares the `*.github.io` origin's root with other content. The Vercel build
@@ -162,7 +162,7 @@ Google cannot recover or reset it.
   `36.0.0`).
 - `compileSdkVersion` / `targetSdkVersion` must both be `36` — Google Play has
   required `targetSdk = 36` for new apps and updates since 2026-08-31.
-- `com.psymore.metronome` is the application/package id on every platform
+- `com.egeozel.metronome` is the application/package id on every platform
   (matches the existing Tauri identifier).
 
 ## The 12-testers/14-days rule

@@ -29,7 +29,7 @@ These were settled before planning. Do not re-open them mid-execution; if one tu
 
 - Node 22+, npm. TypeScript `strict`, ES modules (`"type": "module"`). No UI framework.
 - Runtime dependencies after this work: `idb-keyval` **only** — unchanged from before Phase B. `@bubblewrap/cli` is a dev-time tool, not a runtime dependency. No additions without asking the user.
-- App identifier is `com.psymore.metronome` on **every** platform (already the Tauri identifier; reuse it verbatim as Bubblewrap's `packageId` / the Android `applicationId`).
+- App identifier is `com.egeozel.metronome` on **every** platform (already the Tauri identifier; reuse it verbatim as Bubblewrap's `packageId` / the Android `applicationId`).
 - App name displayed everywhere: `Metronome`.
 - Bubblewrap 1.25.0 (current as of 2026-09). Its generated Android project's `compileSdkVersion`/`targetSdkVersion` must be verified against, and if needed raised to, **36** — do not trust the tool's default without checking (see Task 6).
 - Google Play, as of 2026-08-31, **requires `targetSdk = 36`** for new apps and updates.
@@ -1089,7 +1089,7 @@ Replace `<vercel-domain>` with the URL recorded in Task 5. The wizard prompts in
 
 | Prompt | Answer |
 |---|---|
-| Application ID | `com.psymore.metronome` (Global Constraints — same identifier on every platform) |
+| Application ID | `com.egeozel.metronome` (Global Constraints — same identifier on every platform) |
 | Application name | `Metronome` |
 | Launcher name | `Metronome` |
 | Display mode | `standalone` (should already be inferred from the manifest) |
@@ -1149,7 +1149,7 @@ Run `git status` afterwards and confirm **no keystore file** was staged. If one 
 
 ## Task 7: Wire the Digital Asset Links file and verify domain ownership
 
-The app still shows Chrome's address bar (Task 6, Step 5) because Android has no proof yet that `com.psymore.metronome` and `<vercel-domain>` are published by the same party. `assetlinks.json`, served from the domain's own root, is that proof — it lists the app's signing certificate fingerprint, and Android checks it before hiding the browser chrome.
+The app still shows Chrome's address bar (Task 6, Step 5) because Android has no proof yet that `com.egeozel.metronome` and `<vercel-domain>` are published by the same party. `assetlinks.json`, served from the domain's own root, is that proof — it lists the app's signing certificate fingerprint, and Android checks it before hiding the browser chrome.
 
 **Files:**
 - Create: `public/.well-known/assetlinks.json`
@@ -1184,7 +1184,7 @@ Create `public/.well-known/assetlinks.json`:
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.psymore.metronome",
+      "package_name": "com.egeozel.metronome",
       "sha256_cert_fingerprints": ["<paste-the-fingerprint-from-step-1>"]
     }
   }
@@ -1214,7 +1214,7 @@ Then verify it with Google's own validator:
 curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://<vercel-domain>&relation=delegate_permission/common.handle_all_urls"
 ```
 
-Expected: a JSON response listing a matching statement for `com.psymore.metronome` with the fingerprint from Step 1. An empty `{}` response means the fingerprint, package name, or URL has a typo — recheck Step 2 character-for-character.
+Expected: a JSON response listing a matching statement for `com.egeozel.metronome` with the fingerprint from Step 1. An empty `{}` response means the fingerprint, package name, or URL has a typo — recheck Step 2 character-for-character.
 
 - [x] **Step 5: Reinstall the app and confirm the address bar disappears**
 

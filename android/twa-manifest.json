@@ -1,8 +1,8 @@
 {
-  "packageId": "com.psymore.metronome",
+  "packageId": "com.egeozel.metronome",
   "host": "metronome-delta-gold.vercel.app",
-  "name": "Metronome",
-  "launcherName": "Metronome",
+  "name": "Chronobeat: Metronome",
+  "launcherName": "Chronobeat",
   "display": "standalone",
   "themeColor": "#141416",
   "themeColorDark": "#000000",

@@ -1,4 +1,4 @@
-package com.psymore.metronome;
+package com.egeozel.metronome;
 
 
 
