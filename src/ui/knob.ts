@@ -139,8 +139,8 @@ function renderTeethRing(
   if (!ctx) return canvas;
   ctx.scale(dpr, dpr);
   ctx.translate(outerRadius, outerRadius);
-  // 1.2x the original 0.03 ratio: chunkier gear-tooth notches around the rim.
-  const toothWidth = Math.max(1.5, outerRadius * 0.036);
+  // Width keeps the original 0.036 : 0.054 width-to-depth proportion at any tooth size.
+  const toothWidth = Math.max(1, toothDepth * 0.67);
   for (let i = 0; i < count; i++) {
     const angle = (i * Math.PI * 2) / count;
     ctx.save();
@@ -219,7 +219,9 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
   let sideWall: OffscreenCanvas | HTMLCanvasElement | null = null;
   let assetsFor = { radius: -1, tilted: false, themeName: '' };
 
-  const TOOTH_COUNT = 72;
+  // Fine knurl-like teeth: many small notches rather than the old 72 chunky gear teeth.
+  const TOOTH_COUNT = 120;
+  const SHOW_TEETH = true;
 
   // Grows only the metal bezel/gear-teeth ring; the LCD ("insides") is pegged to the
   // pre-scale size below so it doesn't grow along with it.
@@ -228,8 +230,9 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
   function geometry() {
     const size = Math.min(cssWidth, cssHeight);
     const outerRadius = size * 0.47;
-    // 1.2x the original 0.045 ratio: deeper gear-tooth notches.
-    const toothDepth = outerRadius * 0.054;
+    // Shallow teeth (the old gear teeth were 0.054). Without teeth the face fills the whole
+    // disc, so the silhouette (and the CSS glow around it) stays the same size.
+    const toothDepth = SHOW_TEETH ? outerRadius * 0.025 : 0;
     const innerRadius = outerRadius - toothDepth;
     // The LCD face is sized off the pre-ring-scale radius, so enlarging the outer ring above
     // doesn't also enlarge the "insides".
@@ -263,9 +266,9 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
       return;
     assetsFor = { radius: g.outerRadius, tilted: g.tilted, themeName: currentThemeName };
     const stops = themeMatchStops(canvas);
-    metalTexture = renderMetalTexture(g.innerRadius, dpr, stops, theme.light);
-    teethRing = renderTeethRing(g.outerRadius, g.toothDepth, TOOTH_COUNT, dpr);
-    lcdTexture = renderMetalTexture(g.coreRadius, dpr, lcdStops(canvas), false);
+    metalTexture = renderMetalTexture(g.innerRadius, dpr, stops, theme.light ? 'light' : 'vivid');
+    teethRing = SHOW_TEETH ? renderTeethRing(g.outerRadius, g.toothDepth, TOOTH_COUNT, dpr) : null;
+    lcdTexture = renderMetalTexture(g.coreRadius, dpr, lcdStops(canvas), 'dark');
     sideWall = g.tilted
       ? renderSideWall(g.outerRadius, g.thickness, g.perspectiveY, dpr, theme.light)
       : null;
@@ -337,36 +340,92 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
       c2d.restore();
     }
 
-    // Bezel ring + rotating indicator tick.
+    // Polished chamfer + rotating indicator tick. The chamfer is a bright band on the face's
+    // edge, lit from a fixed direction (it doesn't rotate with the knob): the main hotspot at
+    // top-left and a weaker one at bottom-right, darker at the sides, like a real machined bevel.
     c2d.save();
     c2d.translate(cx, cy);
     c2d.scale(1, g.perspectiveY);
+    const chamfer = Math.max(2, g.outerRadius * 0.035);
+    const side = theme.light ? 'rgba(41, 58, 51, 0.3)' : 'rgba(40, 42, 46, 0.75)';
+    const mid = 'rgba(205, 209, 216, 0.55)';
+    const chamferGrad = c2d.createConicGradient(0, 0, 0);
+    chamferGrad.addColorStop(0, mid);
+    chamferGrad.addColorStop(0.125, 'rgba(255, 255, 255, 0.8)');
+    chamferGrad.addColorStop(0.25, mid);
+    chamferGrad.addColorStop(0.375, side);
+    chamferGrad.addColorStop(0.5, mid);
+    chamferGrad.addColorStop(0.625, 'rgba(255, 255, 255, 0.95)');
+    chamferGrad.addColorStop(0.75, mid);
+    chamferGrad.addColorStop(0.875, side);
+    chamferGrad.addColorStop(1, mid);
+    c2d.beginPath();
+    c2d.arc(0, 0, g.innerRadius - chamfer / 2, 0, Math.PI * 2);
+    c2d.strokeStyle = chamferGrad;
+    c2d.lineWidth = chamfer;
+    c2d.stroke();
+    // Thin dark seams on both edges so the bevel reads as its own surface, separate from the
+    // brushed face inside and the teeth outside.
+    c2d.lineWidth = 1;
+    c2d.strokeStyle = theme.light ? 'rgba(41, 58, 51, 0.3)' : 'rgba(0, 0, 0, 0.55)';
+    c2d.beginPath();
+    c2d.arc(0, 0, g.innerRadius - chamfer, 0, Math.PI * 2);
+    c2d.stroke();
     c2d.beginPath();
     c2d.arc(0, 0, g.innerRadius, 0, Math.PI * 2);
-    const ringGrad = c2d.createLinearGradient(
-      -g.innerRadius,
-      -g.innerRadius,
-      g.innerRadius,
-      g.innerRadius,
-    );
-    ringGrad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-    ringGrad.addColorStop(0.5, theme.light ? 'rgba(41, 58, 51, 0.35)' : 'rgba(20, 20, 22, 0.9)');
-    ringGrad.addColorStop(1, 'rgba(180, 180, 186, 0.4)');
-    c2d.strokeStyle = ringGrad;
-    c2d.lineWidth = Math.max(1.5, g.outerRadius * 0.017);
     c2d.stroke();
 
+    // Raised pin: a tapered fin, like a sail seen from above, wide at the BPM readout end and
+    // narrowing to a rounded tip toward the rim. Both ends sit clear of the chamfer and the LCD
+    // (which ends near 0.55 of the face radius). It has two faces
+    // split along a ridge, each shaded by how it faces the fixed top-left light, so the lit side
+    // swaps as the knob turns. Near-black overall (matching the boot knob's pin) so it reads
+    // against the metal. The cast shadow is an offset fill, not shadowBlur, which would be
+    // re-blurred every rotation frame.
+    const pinIn = g.innerRadius * 0.68;
+    const pinOut = g.innerRadius * 0.92;
+    const baseHalf = Math.max(2.5, g.outerRadius * 0.04);
+    const tipHalf = baseHalf * 0.3;
+    const pinPath = (): void => {
+      c2d.beginPath();
+      c2d.moveTo(-baseHalf, -pinIn);
+      c2d.lineTo(baseHalf, -pinIn);
+      c2d.lineTo(tipHalf, -pinOut);
+      c2d.arc(0, -pinOut, tipHalf, 0, Math.PI, true);
+      c2d.closePath();
+    };
+
+    const lift = Math.max(1.5, g.outerRadius * 0.012);
+    c2d.save();
+    c2d.translate(lift, lift);
     c2d.rotate(rotation);
+    pinPath();
+    c2d.fillStyle = theme.light ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.4)';
+    c2d.fill();
+    c2d.restore();
+
+    c2d.rotate(rotation);
+    // How directly the left face (outward normal = local -x) faces the top-left light.
+    const leftLit = (Math.cos(rotation) + Math.sin(rotation)) / Math.SQRT2;
+    const faceColor = (lit: number): string => {
+      const t = 0.12 + 0.88 * Math.max(0, lit);
+      const ch = (lo: number, hi: number) => Math.round(lo + (hi - lo) * t);
+      return `rgb(${ch(12, 112)}, ${ch(14, 118)}, ${ch(13, 117)})`;
+    };
+    pinPath();
+    c2d.fillStyle = faceColor(-leftLit);
+    c2d.fill();
+    c2d.save();
+    c2d.clip();
+    c2d.fillStyle = faceColor(leftLit);
+    c2d.fillRect(-baseHalf, -pinOut - tipHalf, baseHalf, pinOut - pinIn + tipHalf);
+    c2d.restore();
+    // Ridge line catching the light along the top of the fin.
     c2d.beginPath();
-    // Both ends pulled inward, toward the BPM readout, so the bright tip sits clear of the bezel
-    // ring and the gear teeth just outside it instead of nearly touching them.
-    c2d.moveTo(0, -g.innerRadius + g.innerRadius * 0.08);
-    c2d.lineTo(0, -g.innerRadius + g.innerRadius * 0.25);
-    c2d.lineWidth = Math.max(2, g.outerRadius * 0.03);
-    c2d.lineCap = 'round';
-    // Near-black in every theme (matching the boot knob's pin) so it always reads against the
-    // metal. No glow: a shadow would be re-blurred on every rotation frame.
-    c2d.strokeStyle = '#0c0e0d';
+    c2d.moveTo(0, -pinIn);
+    c2d.lineTo(0, -pinOut);
+    c2d.lineWidth = 1;
+    c2d.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     c2d.stroke();
     c2d.restore();
 
