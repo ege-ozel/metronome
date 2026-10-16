@@ -375,55 +375,77 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
     c2d.arc(0, 0, g.innerRadius, 0, Math.PI * 2);
     c2d.stroke();
 
-    // Raised pin: a tapered fin, like a sail seen from above, wide at the BPM readout end and
-    // narrowing to a rounded tip toward the rim. Both ends sit clear of the chamfer and the LCD
-    // (which ends near 0.55 of the face radius). It has two faces
-    // split along a ridge, each shaded by how it faces the fixed top-left light, so the lit side
-    // swaps as the knob turns. Near-black overall (matching the boot knob's pin) so it reads
-    // against the metal. The cast shadow is an offset fill, not shadowBlur, which would be
-    // re-blurred every rotation frame.
+    // Raised pin: a sail-like fin standing up off the face. Its footprint is wide at the BPM
+    // readout end and narrows toward the rim; its top ridge is tallest at the readout end and
+    // drops toward the rim tip. Both ends sit clear of the chamfer and the LCD (which ends near
+    // 0.55 of the face radius). It is projected per frame for a viewer looking slightly from
+    // below, so the ridge leans up the screen and whichever face turns toward the viewer is
+    // the one seen, at any angle, with no pre-rendered frames. Faces are shaded against the
+    // fixed top-left light, and the cast shadow (offset fills, not shadowBlur, which would be
+    // re-blurred every frame) stretches toward the bottom-right with the fin's height.
     const pinIn = g.innerRadius * 0.68;
     const pinOut = g.innerRadius * 0.92;
     const baseHalf = Math.max(2.5, g.outerRadius * 0.04);
     const tipHalf = baseHalf * 0.3;
-    const pinPath = (): void => {
+    const heightIn = g.outerRadius * 0.12;
+    const heightOut = g.outerRadius * 0.02;
+    const view = (g.tilted ? 0.6 : 0.35) / g.perspectiveY;
+    const cosR = Math.cos(rotation);
+    const sinR = Math.sin(rotation);
+    type Pt = [number, number];
+    const at = (x: number, y: number): Pt => [x * cosR - y * sinR, x * sinR + y * cosR];
+    const raise = ([x, y]: Pt, h: number, dx: number, dy: number): Pt => [x + h * dx, y + h * dy];
+    const baseInL = at(-baseHalf, -pinIn);
+    const baseInR = at(baseHalf, -pinIn);
+    const baseOutL = at(-tipHalf, -pinOut);
+    const baseOutR = at(tipHalf, -pinOut);
+    const ridgeIn = at(0, -pinIn);
+    const ridgeOut = at(0, -pinOut);
+    const poly = (pts: Pt[]): void => {
       c2d.beginPath();
-      c2d.moveTo(-baseHalf, -pinIn);
-      c2d.lineTo(baseHalf, -pinIn);
-      c2d.lineTo(tipHalf, -pinOut);
-      c2d.arc(0, -pinOut, tipHalf, 0, Math.PI, true);
+      c2d.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) c2d.lineTo(pts[i][0], pts[i][1]);
       c2d.closePath();
     };
 
-    const lift = Math.max(1.5, g.outerRadius * 0.012);
-    c2d.save();
-    c2d.translate(lift, lift);
-    c2d.rotate(rotation);
-    pinPath();
+    // Cast shadow: the footprint plus each face swept to where the light pushes the ridge.
+    const sIn = raise(ridgeIn, heightIn, 0.55, 0.55);
+    const sOut = raise(ridgeOut, heightOut, 0.55, 0.55);
     c2d.fillStyle = theme.light ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.4)';
-    c2d.fill();
-    c2d.restore();
+    for (const face of [
+      [baseInL, baseOutL, sOut, sIn],
+      [baseInR, baseOutR, sOut, sIn],
+      [baseInL, baseInR, sIn],
+    ]) {
+      poly(face);
+      c2d.fill();
+    }
 
-    c2d.rotate(rotation);
-    // How directly the left face (outward normal = local -x) faces the top-left light.
-    const leftLit = (Math.cos(rotation) + Math.sin(rotation)) / Math.SQRT2;
+    const topIn = raise(ridgeIn, heightIn, 0, -view);
+    const topOut = raise(ridgeOut, heightOut, 0, -view);
     const faceColor = (lit: number): string => {
       const t = 0.12 + 0.88 * Math.max(0, lit);
       const ch = (lo: number, hi: number) => Math.round(lo + (hi - lo) * t);
       return `rgb(${ch(12, 112)}, ${ch(14, 118)}, ${ch(13, 117)})`;
     };
-    pinPath();
-    c2d.fillStyle = faceColor(-leftLit);
-    c2d.fill();
-    c2d.save();
-    c2d.clip();
-    c2d.fillStyle = faceColor(leftLit);
-    c2d.fillRect(-baseHalf, -pinOut - tipHalf, baseHalf, pinOut - pinIn + tipHalf);
-    c2d.restore();
+    // Each face: its outline, and its outward normal in screen space (local -x, +x, +y).
+    // Light comes from the top-left, (-1, -1)/√2; the viewer sits toward screen +y, so faces
+    // are painted from the one turned furthest away to the one turned most toward the viewer.
+    const faces: { pts: Pt[]; nx: number; ny: number }[] = [
+      { pts: [baseInL, baseOutL, topOut, topIn], nx: -cosR, ny: -sinR },
+      { pts: [baseInR, baseOutR, topOut, topIn], nx: cosR, ny: sinR },
+      { pts: [baseInL, baseInR, topIn], nx: -sinR, ny: cosR },
+    ];
+    faces.sort((a, b) => a.ny - b.ny);
+    for (const f of faces) {
+      poly(f.pts);
+      c2d.fillStyle = faceColor(-(f.nx + f.ny) / Math.SQRT2);
+      c2d.fill();
+    }
     // Ridge line catching the light along the top of the fin.
     c2d.beginPath();
-    c2d.moveTo(0, -pinIn);
-    c2d.lineTo(0, -pinOut);
+    c2d.moveTo(topIn[0], topIn[1]);
+    c2d.lineTo(topOut[0], topOut[1]);
     c2d.lineWidth = 1;
     c2d.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     c2d.stroke();
