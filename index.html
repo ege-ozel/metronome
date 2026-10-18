@@ -153,8 +153,8 @@
         4.167%, 75% { opacity: 1; }
         91.667%, 100% { opacity: 0; }
       }
-      /* The Android launch splash, exactly: the same art (public/boot-knob.svg and
-         boot-glyph.svg are built from icon.svg by scripts/boot-knob.cjs, halo baked in) at the
+      /* The Android launch splash, exactly: the same art (public/boot-knob.webp, rendered from
+         the app's own knob, and boot-glyph.svg, both by scripts/knob-art.cjs, halo baked in) at the
          splash's 216 dp, on the same #141416, so the hand-over is seamless. The halo is part of
          the image, so there is no box-shadow to paint. */
       .boot-knob {
@@ -298,7 +298,7 @@
       </div>
       <div class="boot-knob">
         <div class="boot-glow"><i></i><i></i><i></i><i></i></div>
-        <div class="boot-knob-spin"><img src="/boot-knob.svg" alt="" draggable="false" /></div>
+        <div class="boot-knob-spin"><img src="/boot-knob.webp" alt="" draggable="false" /></div>
         <img src="/boot-glyph.svg" alt="" draggable="false" />
       </div>
     </div>
