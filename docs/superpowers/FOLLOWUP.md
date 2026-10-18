@@ -3,88 +3,57 @@
 If you are a fresh session: read `CLAUDE.md` first, then this file, then act on "Next step"
 immediately.
 
-## Where things stand (2026-10-15)
+## Where things stand (2026-10-19)
 
-Two local branches off `master`, **neither pushed nor merged**:
+Both branches are merged into `master` and pushed (`cbc4dd3`); Vercel is live with them
+(verified: `boot-knob.webp` serves, `assetlinks.json` names `com.egeozel.metronome`).
 
-> 2026-10-19 update: `feat/brighter-dial` is committed (`2174f3a`, `a174bfc`: brighter body,
-> chamfer, fine teeth, 3D projected pin with height-scaled shadow; TEMP A/B removed). The
-> package-id branch got `cf61721`: bubblewrap had replaced the scripted splash with a bigger
-> halo-less knob; restored master's splash PNGs, so splash and web boot loader now match
-> (478 px both, same centre, measured from a screen recording). Phone has
-> `/data/local/tmp/chrome-command-line` (skips asset-link check for the debug app) plus the
-> Chrome flag "Enable command line on non-rooted devices"; turn both off after testing.
-> Then `7c08313` on `feat/brighter-dial`: `scripts/knob-art.cjs` renders the real app knob
-> (`scripts/knob-art.html`, `KnobDeps.bare`, needs `npm run dev` + Chrome) into the splash,
-> `public/boot-knob.webp` loader, launcher mipmaps and the Play icon (`android/store_icon.png`,
-> `docs/play-assets/play-store-icon-512.png`). `android-icons.cjs` and `boot-knob.cjs/.svg` are
-> gone. Merging `chore/package-id-egeozel` will conflict on those two Play icon files: keep the
-> `feat/brighter-dial` versions. Web/PWA (`pwa-*`, maskable, favicon) and Tauri icons still come
-> from the old `public/icon.svg`. The pin shadow rotating with the loader image is accepted.
-> Next: approval to push/merge both branches.
+- Package id `com.egeozel.metronome` (Android, TWA manifest, assetlinks, Tauri). Debug build
+  type: `.test` suffix, "Chronobeat Test".
+- Knob (`src/ui/knob.ts`): brighter `vivid` body, polished chamfer, 120 fine teeth
+  (`SHOW_TEETH`), 3D sail pin projected per frame with a height-scaled cast shadow.
+- Knob art (`scripts/knob-art.cjs` + `scripts/knob-art.html`, `KnobDeps.bare`): renders the real
+  knob in headless Chrome (needs `npm run dev`) into the launch splash (5 densities),
+  `public/boot-knob.webp` (boot loader), `public/splash-icon-*`, launcher mipmaps, and the Play
+  icon (`android/store_icon.png`, `docs/play-assets/play-store-icon-512.png`). Re-run it after
+  any knob change. `android-icons.cjs` and `boot-knob.cjs/.svg` were removed.
+- Splash and boot loader measured on the phone from a screen recording: same size and centre.
+  Remaining Chrome-side behaviour: a ~0.5 s blank between splash and loader while Chrome slides
+  in, and the loader starts ~28 dp high for a moment while Chrome settles the viewport. Recheck
+  on the Play build.
+- Release AAB rebuilt (unsigned): `android/app/build/outputs/bundle/release/app-release.aab`,
+  versionCode 1. The user signs it (see below).
 
-### Branch 1: `chore/package-id-egeozel` (commits `af3a1bc`, `cf61721`)
-
-- Package id is now `com.egeozel.metronome`: Android, twa-manifest,
-  `public/.well-known/assetlinks.json`, Tauri identifier, related docs.
-- `android/app/build.gradle` debug buildType: `.test` suffix, "Chronobeat Test" label.
-- Launcher icon: original repo icon (glowing green dial on black). Play icon
-  `docs/play-assets/play-store-icon-512.png`, same style, user-approved.
-- Play listing draft: `docs/play-listing.md`.
-
-### Branch 2: `feat/brighter-dial` (checked out, **uncommitted**, under phone review)
-
-- `src/ui/metalTexture.ts`: `MetalFinish` (`'dark' | 'vivid' | 'light'`) + `SHADING` table. `vivid`
-  = dark-theme dial body: less edge darkening, more sheen, dark lines between the white brush
-  lines. LCD and dialHub still use `dark`. User likes the brighter body.
-- `src/ui/knob.ts`:
-  - Body uses `vivid` (light theme `light`). **Line ~268 has a `// TEMP A/B` `?eski` URL toggle:
-    remove it before committing** (keep `theme.light ? 'light' : 'vivid'`).
-  - The old thin bezel stroke is replaced by a **polished chamfer**: a conic-gradient band
-    (~3.5% of radius) on the face edge, lit from a fixed top-left light (hotspots top-left and
-    bottom-right), with thin dark seams on both edges. User: "süper oldu".
-  - **Teeth**: `SHOW_TEETH` flag (currently `true`), `TOOTH_COUNT` 120, depth `0.025` of the outer
-    radius (old: 72 teeth, `0.054`); tooth width now derives from depth. With `SHOW_TEETH = false`
-    the face fills the whole disc. User was unsure about teeth; tiny ones are the current trial.
-  - **3D pin** replaces the flat near-black tick: a sail-like tapered fin, wide end toward the BPM
-    readout (0.68 of face radius), rounded narrow tip toward the rim (0.92), half-width
-    `0.04 * outerRadius`. Two faces split by a ridge, shaded per frame against the fixed top-left
-    light; offset-fill cast shadow (no shadowBlur); faint ridge highlight. The last change
-    (flip + enlarge) has **not been seen by the user yet**.
-- `src/styles.css`: the knob glow (`.knob-wrap::before`) was tried and **removed** at the user's
-  request; the file now matches `master`.
-- Performance: not measured. User feels no stutter when turning. If needed, measure with
-  `chrome://inspect` remote Performance trace, or cache chamfer/pin as sprites.
-- Not run since these edits: typecheck, lint, tests (275 passed before the chamfer/pin work).
-
-Dev-server testing: a Vite server (`npx vite --host`) was already running on port 5173.
-Phone over USB: `adb reverse tcp:5173 tcp:5173`, then
-`adb shell am start -a android.intent.action.VIEW -d http://localhost:5173`. Over Wi-Fi:
-http://192.168.1.200:5173.
+Phone test setup still active (turn off when done): `/data/local/tmp/chrome-command-line`
+(skips the asset-link check for the debug app) and Chrome flag "Enable command line on
+non-rooted devices". Remove with `adb shell rm /data/local/tmp/chrome-command-line` and set the
+flag back to Default.
 
 ## Next step
 
-1. Get the user's phone verdict on the flipped/enlarged pin and the tiny teeth (adjust size,
-   shape, or drop teeth via `SHOW_TEETH`). Offer the 2.5D side-wall knurl idea if teeth go.
-2. Once approved: remove the `TEMP A/B` code, run `npx biome check .`, `npx vitest run`,
-   `npm run build`, then commit on `feat/brighter-dial`.
-3. Ask for approval to push both branches and merge into `master`.
-4. Package id changed, so rebuild the release AAB: in `android/`, PowerShell
-   `.\gradlew.bat bundleRelease`. The user signs it with jarsigner in their own terminal
-   (keystore `C:\Users\4D\Keystores\metronome\release.keystore`; never ask for the password).
-5. Open Play work: feature graphic (1024×500) and at least 2 screenshots; verify the claims in
+1. User signs the AAB in their own terminal (never ask for the password):
+   `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore
+   C:\Users\4D\Keystores\metronome\release.keystore
+   android\app\build\outputs\bundle\release\app-release.aab metronome -signedjar
+   android\app-release-bundle.aab`, then `jarsigner -verify -verbose -certs ...`.
+2. Open question to the user: should web/PWA icons (favicon, `pwa-*`, maskable,
+   apple-touch) and the Tauri icons also move to the new knob? They still come from
+   `public/icon.svg`. If yes, extend `scripts/knob-art.cjs`.
+3. Play work: feature graphic (1024×500) and at least 2 screenshots; verify the claims in
    `docs/play-listing.md`; Play Console setup; add the Play App Signing SHA-256 to
-   `assetlinks.json`; closed testing (12 testers / 14 days).
-6. Cleanup: the old `com.psymore.metronome.test` app on the phone can be uninstalled;
-   `docs/play-assets/icon-candidates/` and `icon-candidates.zip` are untracked, decide whether to
-   delete them.
+   `public/.well-known/assetlinks.json`; closed testing (12 testers / 14 days).
+4. Cleanup: uninstall `com.psymore.metronome.test` from the phone; decide on the untracked
+   `docs/play-assets/icon-candidates/` and `icon-candidates.zip`; local branches
+   `chore/package-id-egeozel` and `feat/brighter-dial` are merged and can be deleted.
 
 ## Standing instructions
 
 - Never use git worktrees. No `Co-Authored-By` lines in commits.
 - Run lint, tests and build before any push. Ask before push, merge, or remote changes.
-- Never run `bubblewrap update`: it wipes the launcher icon and the debug buildType.
+- Never run `bubblewrap update`: it wipes the launcher icon, the debug buildType and the
+  scripted splash.
 - The keystore password never goes into the chat; the user signs the AAB.
 - Test phone: Redmi Note 10 Pro (MIUI 14, Android 13). `adb install` sometimes fails with
   `INSTALL_FAILED_USER_RESTRICTED`: enable "Install via USB" and tap the on-phone prompt quickly.
+- In Git Bash, prefix adb commands that take device paths with `MSYS_NO_PATHCONV=1`.
 - Keep turns economical; no reflexive test/build runs for tiny changes.
