@@ -7,7 +7,23 @@ immediately.
 
 Two local branches off `master`, **neither pushed nor merged**:
 
-### Branch 1: `chore/package-id-egeozel` (commit `af3a1bc`)
+> 2026-10-19 update: `feat/brighter-dial` is committed (`2174f3a`, `a174bfc`: brighter body,
+> chamfer, fine teeth, 3D projected pin with height-scaled shadow; TEMP A/B removed). The
+> package-id branch got `cf61721`: bubblewrap had replaced the scripted splash with a bigger
+> halo-less knob; restored master's splash PNGs, so splash and web boot loader now match
+> (478 px both, same centre, measured from a screen recording). Phone has
+> `/data/local/tmp/chrome-command-line` (skips asset-link check for the debug app) plus the
+> Chrome flag "Enable command line on non-rooted devices"; turn both off after testing.
+> Then `7c08313` on `feat/brighter-dial`: `scripts/knob-art.cjs` renders the real app knob
+> (`scripts/knob-art.html`, `KnobDeps.bare`, needs `npm run dev` + Chrome) into the splash,
+> `public/boot-knob.webp` loader, launcher mipmaps and the Play icon (`android/store_icon.png`,
+> `docs/play-assets/play-store-icon-512.png`). `android-icons.cjs` and `boot-knob.cjs/.svg` are
+> gone. Merging `chore/package-id-egeozel` will conflict on those two Play icon files: keep the
+> `feat/brighter-dial` versions. Web/PWA (`pwa-*`, maskable, favicon) and Tauri icons still come
+> from the old `public/icon.svg`. The pin shadow rotating with the loader image is accepted.
+> Next: approval to push/merge both branches.
+
+### Branch 1: `chore/package-id-egeozel` (commits `af3a1bc`, `cf61721`)
 
 - Package id is now `com.egeozel.metronome`: Android, twa-manifest,
   `public/.well-known/assetlinks.json`, Tauri identifier, related docs.
