@@ -33,7 +33,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,woff2}'],
         // Built-in sounds are not precached (about 1.9 MB). Each one is fetched on first use and
         // kept here, so it works offline afterwards without a large first-visit download.
         runtimeCaching: [

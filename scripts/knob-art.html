@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Dev-only page that draws the real app knob (src/ui/knob.ts, teal theme, no readout) for
+     scripts/knob-art.cjs to screenshot. The 500 px frame matches the 6 6 500 500 viewBox of
+     public/boot-glyph.svg: the knob's outer radius is 200, as in public/icon.svg. -->
+<html lang="en" data-theme="teal">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Knob art</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 500px;
+        height: 500px;
+        background: transparent !important;
+        overflow: hidden;
+      }
+      #knob {
+        position: absolute;
+        /* 0.47 of the canvas is the knob's outer radius: 0.47 * 425.53 = 200. */
+        width: 425.53px;
+        height: 425.53px;
+        left: calc(250px - 212.765px);
+        top: calc(250px - 212.765px);
+        filter: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="knob"></canvas>
+    <script type="module">
+      import '/src/styles.css';
+      import { createStore } from '/src/state/store.ts';
+      import { mountKnob } from '/src/ui/knob.ts';
+
+      document.documentElement.classList.remove('depth-25d');
+      const store = createStore({ bpm: 120, theme: 'teal' });
+      mountKnob(document.getElementById('knob'), {
+        store,
+        isRunning: () => false,
+        toggle: () => {},
+        bare: true,
+      });
+      document.documentElement.dataset.ready = 'true';
+    </script>
+  </body>
+</html>

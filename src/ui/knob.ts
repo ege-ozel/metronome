@@ -62,6 +62,9 @@ export interface KnobDeps {
   store: Store<Settings>;
   isRunning: () => boolean;
   toggle: () => void;
+  /** Draws the knob without its readout (BPM, label, play icon): used by scripts/knob-art.html
+   *  to render the launch splash and boot loader art from the real knob. */
+  bare?: boolean;
 }
 
 export interface Knob {
@@ -509,6 +512,10 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
     c2d.strokeStyle = hovered ? rgba(hoverRgb, 1) : theme.brass;
     c2d.lineWidth = Math.max(1.2, g.coreRadius * 0.045);
     c2d.stroke();
+    if (deps.bare) {
+      c2d.restore();
+      return;
+    }
 
     const bpm = Math.round(deps.store.get().bpm);
 
