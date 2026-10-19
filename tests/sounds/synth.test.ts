@@ -32,7 +32,7 @@ describe('renderClick', () => {
       'builtin:wood',
       'builtin:beep',
     ]);
-    expect(ids.length).toBe(4 + 54);
+    expect(ids.length).toBe(4 + 51);
   });
 
   it('points every file-backed built-in at a WAV that exists in public/sounds', () => {

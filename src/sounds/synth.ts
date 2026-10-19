@@ -78,7 +78,6 @@ export const BUILTIN_SOUNDS: Record<string, BuiltinSound> = {
   ),
   'builtin:vcsl_slapstick_rr1': fileSound('Slapstick', 'vcsl_slapstick_rr1', 'woodblock'),
   'builtin:vcsl_wood_click2_mp': fileSound('Wood Click 2', 'vcsl_wood_click2_mp', 'woodblock'),
-  'builtin:vcsl_wood_click3_vl2': fileSound('Wood Click 3', 'vcsl_wood_click3_vl2', 'woodblock'),
   'builtin:vcsl_wood_click_f_rr1': fileSound('Wood Click F', 'vcsl_wood_click_f_rr1', 'woodblock'),
   'builtin:vcsl_wood_click_ff': fileSound('Wood Click FF', 'vcsl_wood_click_ff', 'woodblock'),
   'builtin:vcsl_wood_click_mp': fileSound('Wood Click MP', 'vcsl_wood_click_mp', 'woodblock'),
@@ -95,17 +94,11 @@ export const BUILTIN_SOUNDS: Record<string, BuiltinSound> = {
     'fs_jonopodmore_mechanical-metronome-3',
     'clock',
   ),
-  'builtin:fs_julien-matthey_tick-tock': fileSound(
-    'Tick-Tock',
-    'fs_julien-matthey_tick-tock',
-    'clock',
-  ),
   'builtin:fs_korgms2000b_metronome-click': fileSound(
     'Metronome Click A',
     'fs_korgms2000b_metronome-click',
     'clock',
   ),
-  'builtin:fs_magundah14_tic-toc': fileSound('Tic-Toc', 'fs_magundah14_tic-toc', 'clock'),
   'builtin:fs_pbimal_clock-tick-01': fileSound('Clock Tick', 'fs_pbimal_clock-tick-01', 'clock'),
   'builtin:fs_pushkin_metronome-2': fileSound('Metronome 2', 'fs_pushkin_metronome-2', 'clock'),
   'builtin:fs_sadiquecat_metronome-click': fileSound(

@@ -7,8 +7,8 @@ export const SOUND_PRESETS = [
   },
   {
     id: 'woodblock',
-    accentSoundId: 'builtin:vcsl_Agogo_High_v2_rr1_Mid',
-    normalSoundId: 'builtin:vcsl_Agogo_Low_v2_rr1_Mid',
+    accentSoundId: 'builtin:vcsl_wood_click2_mp',
+    normalSoundId: 'builtin:vcsl_wood_click_f_rr1',
   },
   {
     id: 'mechanical',
@@ -22,13 +22,13 @@ export const SOUND_PRESETS = [
   },
   {
     id: 'drumMachine',
-    accentSoundId: 'builtin:synth_tr808-cowbell',
+    accentSoundId: 'builtin:synth_tr808-rimshot',
     normalSoundId: 'builtin:synth_tr808-hat-closed',
   },
   {
     id: 'claves',
-    accentSoundId: 'builtin:vcsl_Claves1_Hit_v3_rr1_Mid',
-    normalSoundId: 'builtin:vcsl_Claves2_Hit_v2_rr1_Mid',
+    accentSoundId: 'builtin:vcsl_Claves2_Hit_v2_rr1_Mid',
+    normalSoundId: 'builtin:vcsl_Claves1_Hit_v3_rr1_Mid',
   },
   {
     id: 'logDrum',
