@@ -1052,6 +1052,8 @@ output {
 .sig-poly-tag {
   font-size: 9px;
   letter-spacing: 0.18em;
+  /* The tab's own "Poly"/"Poli" string, uppercased; <html lang> gives Turkish its dotted İ. */
+  text-transform: uppercase;
   opacity: 0.85;
 }
 .sig-poly-fraction {
