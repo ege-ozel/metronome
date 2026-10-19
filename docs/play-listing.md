@@ -94,4 +94,4 @@ Soru ve geri bildirim: egeozeldev@gmail.com
 |---|---|---|
 | App icon | 512 x 512 PNG | `docs/play-assets/play-store-icon-512.png` (from `scripts/knob-art.cjs`) |
 | Feature graphic | 1024 x 500 PNG/JPG | `docs/play-assets/feature-graphic-1024x500.png`, Turkish `feature-graphic-1024x500-tr.png` (from `scripts/feature-graphic.html`, `?lang=tr`) |
-| Phone screenshots | min 2, 16:9 or 9:16, 320-3840 px | capture from the live app |
+| Phone screenshots | min 2, 16:9 or 9:16, 320-3840 px | `docs/play-assets/screenshots/en/` (7, 1080 x 2160, status and nav bars cropped) |
