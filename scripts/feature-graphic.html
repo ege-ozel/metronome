@@ -1,0 +1,125 @@
+<!doctype html>
+<!-- Dev-only page for the Play Store feature graphic (1024 x 500): the real app knob (teal theme,
+     120 BPM) with the app's own fonts. ?lang=tr gives the Turkish version
+     (feature-graphic-1024x500-tr.png). With the dev server running, render it at 2x and scale
+     down to docs/play-assets/feature-graphic-1024x500.png (opaque, as Play requires):
+       chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=1024,500
+         --virtual-time-budget=8000 --screenshot=fg2x.png http://localhost:5173/scripts/feature-graphic.html
+       node -e "require('sharp')('fg2x.png').resize(1024,500).flatten({background:'#141310'})
+         .png().toFile('docs/play-assets/feature-graphic-1024x500.png')" -->
+<html lang="en" data-theme="teal">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Feature graphic</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background:
+          radial-gradient(circle at 280px 250px, rgb(79 184 148 / 0.22) 0, rgb(79 184 148 / 0.07) 180px, transparent 290px),
+          radial-gradient(ellipse at 80% 20%, #221f18 0, transparent 60%),
+          linear-gradient(160deg, #1d1b15 0%, #141310 55%, #0e0d0a 100%);
+        font-family: var(--font-sans);
+        color: #f2ead9;
+      }
+      /* styles.css sizes every svg as a 24 px icon. */
+      #orbit {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1024px;
+        height: 500px;
+      }
+      #knob {
+        position: absolute;
+        /* Knob outer radius is 0.47 of the canvas: 0.47 * 350 = 164.5. */
+        width: 350px;
+        height: 350px;
+        left: calc(280px - 175px);
+        top: calc(250px - 175px);
+      }
+      .copy {
+        position: absolute;
+        left: 540px;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 76px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .tagline {
+        margin: 0;
+        font-family: var(--font-score);
+        font-style: italic;
+        font-weight: 600;
+        font-size: 34px;
+        color: #4fb894;
+      }
+      .features {
+        margin: 10px 0 0;
+        font-size: 19px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgb(242 234 217 / 0.62);
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+    <svg id="orbit" width="1024" height="500" viewBox="0 0 1024 500" aria-hidden="true">
+      <circle cx="280" cy="250" r="196" fill="none" stroke="rgb(79 184 148 / 0.28)" stroke-width="2" />
+      <!-- Four beat nodes on the orbit, like the circular visualiser; the downbeat is lit. -->
+      <circle cx="280" cy="54" r="26" fill="rgb(253 247 210 / 0.18)" />
+      <circle cx="280" cy="54" r="15" fill="#fdf7d2" />
+      <circle cx="476" cy="250" r="13" fill="#4fb894" />
+      <circle cx="280" cy="446" r="13" fill="#4fb894" />
+      <circle cx="84" cy="250" r="13" fill="#4fb894" />
+    </svg>
+    <canvas id="knob" class="knob"></canvas>
+    <div class="copy">
+      <h1>Chronobeat</h1>
+      <p class="tagline">The precise metronome</p>
+      <p class="features">Circular visuals · Polyrhythms<br />Subdivisions · Tap tempo</p>
+    </div>
+    </div>
+    <script type="module">
+      import '/src/styles.css';
+      import { createStore } from '/src/state/store.ts';
+      import { mountKnob } from '/src/ui/knob.ts';
+
+      // Turkish listing: lang="tr" also makes the uppercase features line use a dotted İ.
+      if (new URLSearchParams(location.search).get('lang') === 'tr') {
+        document.documentElement.lang = 'tr';
+        document.querySelector('.tagline').textContent = 'Hassas metronom';
+        document.querySelector('.features').innerHTML =
+          'Dairesel görsel · Poliritim<br />Alt bölüm · Tap tempo';
+      }
+      document.documentElement.classList.remove('depth-25d');
+      const store = createStore({ bpm: 120, theme: 'teal' });
+      mountKnob(document.getElementById('knob'), {
+        store,
+        isRunning: () => false,
+        toggle: () => {},
+      });
+      document.documentElement.dataset.ready = 'true';
+    </script>
+  </body>
+</html>
