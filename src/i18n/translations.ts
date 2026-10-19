@@ -2,7 +2,7 @@ import type { Language } from '../state/settings';
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
-    'app.title': 'Metronome',
+    'app.title': 'Chronobeat',
     'viz.ariaLabel': 'Visualiser',
     'viz.circle': 'Circle',
     'viz.line': 'Line',
@@ -214,7 +214,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'beatLevel.mute': 'mute',
   },
   tr: {
-    'app.title': 'Metronom',
+    'app.title': 'Chronobeat',
     'viz.ariaLabel': 'Görselleştirici',
     'viz.circle': 'Daire',
     'viz.line': 'Çizgi',

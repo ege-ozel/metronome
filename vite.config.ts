@@ -14,8 +14,8 @@ export default defineConfig({
       // The 192/512 icons are knob-only on transparent: Chrome centres one of these on the
       // background_color for the installed-PWA splash, and a full-bleed tile shows as a box.
       manifest: {
-        name: 'Metronome',
-        short_name: 'Metronome',
+        name: 'Chronobeat: Metronome',
+        short_name: 'Chronobeat',
         description: 'A precise metronome with custom sounds and synced visualisers.',
         theme_color: '#141416',
         background_color: '#141416',

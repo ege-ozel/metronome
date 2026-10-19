@@ -9,7 +9,7 @@ describe('i18n', () => {
   });
 
   it('resolves a known key in the current language', () => {
-    expect(t('app.title')).toBe('Metronome');
+    expect(t('app.title')).toBe('Chronobeat');
   });
 
   it('substitutes {placeholders} in a formatted string', () => {
