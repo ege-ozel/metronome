@@ -5,54 +5,63 @@ immediately.
 
 ## Where things stand (2026-10-19)
 
-Both branches are merged into `master` and pushed (`cbc4dd3`); Vercel is live with them
-(verified: `boot-knob.webp` serves, `assetlinks.json` names `com.egeozel.metronome`).
+`master` is pushed through `b4825eb` and live on Vercel; two later commits (`e1cee83` and this
+note) are local only. Today's work:
 
-- Package id `com.egeozel.metronome` (Android, TWA manifest, assetlinks, Tauri). Debug build
-  type: `.test` suffix, "Chronobeat Test".
-- Knob (`src/ui/knob.ts`): brighter `vivid` body, polished chamfer, 120 fine teeth
-  (`SHOW_TEETH`), 3D sail pin projected per frame with a height-scaled cast shadow.
-- Knob art (`scripts/knob-art.cjs` + `scripts/knob-art.html`, `KnobDeps.bare`): renders the real
-  knob in headless Chrome (needs `npm run dev`) into the launch splash (5 densities),
-  `public/boot-knob.webp` (boot loader), `public/splash-icon-*`, launcher mipmaps, and the Play
-  icon (`android/store_icon.png`, `docs/play-assets/play-store-icon-512.png`), and the web and
-  Windows icons: favicon, `pwa-*` and `src-tauri/icons/*` use the bare knob with no halo (user's
-  choice); maskable and apple-touch use the launcher art on black. Re-run it after any knob
-  change. `pwa-assets.config.ts` and `@vite-pwa/assets-generator` were removed. `android-icons.cjs` and `boot-knob.cjs/.svg` were removed.
-- Splash and boot loader measured on the phone from a screen recording: same size and centre.
-  Remaining Chrome-side behaviour: a ~0.5 s blank between splash and loader while Chrome slides
-  in, and the loader starts ~28 dp high for a moment while Chrome settles the viewport. Recheck
-  on the Play build.
-- Release AAB rebuilt (unsigned): `android/app/build/outputs/bundle/release/app-release.aab`,
-  versionCode 1. The user signs it (see below).
+- App renamed to **Chronobeat** everywhere visible (header, page title, PWA manifest
+  `Chronobeat: Metronome` / `Chronobeat`, Windows productName, privacy policy). Built-in sound
+  names such as "Metronome Click A" stay as they are.
+- Light theme in amber: knob ring blends from orange at the rim to the page cream at the LCD
+  (`renderBandedMetalTexture` with a smoothstep seam), amber dial nodes, accents and +/- buttons.
+- Small icons (favicon, `pwa-*`, Tauri icons, legacy Android launcher) render the knob without
+  the pin's cast shadow (`KnobDeps.noPinShadow`, `scripts/knob-art.html?noshadow`). The splash,
+  boot loader, adaptive launcher, maskable/apple and Play icons keep the shadow (user's choice:
+  "önemli değil"). Note: re-running `scripts/knob-art.cjs` rewrites every image (random grooves);
+  revert the ones you did not mean to change.
+- Signature button's POLY tag is translated (`viz.poly`, uppercased in CSS: POLY / POLİ).
+  "Bar" stays "Bar" in Turkish and sound names stay English, on purpose.
+- Windows installer rebuilt: `src-tauri/target/release/bundle/nsis/Chronobeat_0.1.0_x64-setup.exe`.
+- Signed release bundle: `android/app-release-bundle.aab` (`com.egeozel.metronome`, versionCode
+  1). It predates the shadowless legacy launcher icon; harmless (Android 5–7 only).
 
-Phone test setup still active (turn off when done): `/data/local/tmp/chrome-command-line`
-(skips the asset-link check for the debug app) and Chrome flag "Enable command line on
-non-rooted devices". Remove with `adb shell rm /data/local/tmp/chrome-command-line` and set the
-flag back to Default.
+Play assets (all committed, in `docs/play-assets/`):
+- Feature graphic: `feature-graphic-1024x500.png` and `-tr.png`, rendered from
+  `scripts/feature-graphic.html` (`?lang=tr`); the render command is in that file's comment.
+- Phone screenshots: `screenshots/en/` and `screenshots/tr/`, 7 each (circle, poly, light,
+  line, timer, sounds, menu), 1080×2160 with the status and nav bars cropped (Play's 2:1 limit).
+- `docs/play-listing.md` lists them; listing texts are there in English and Turkish.
+
+Phone state: the release TWA (`com.egeozel.metronome`) is no longer installed; the user
+reinstalled the Chrome web app (WebAPK `org.chromium.webapk.a6838f89fc4513e17_v2`). On MIUI,
+`am start` from adb is blocked; launch with `adb shell monkey -p <package> -c
+android.intent.category.LAUNCHER 1`. The Chrome flag "Enable command line on non-rooted
+devices" is still on (shows a warning toast) — the user should set it back to Default.
 
 ## Next step
 
-1. User signs the AAB in their own terminal (never ask for the password):
-   `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore
-   C:\Users\4D\Keystores\metronome\release.keystore
-   android\app\build\outputs\bundle\release\app-release.aab metronome -signedjar
-   android\app-release-bundle.aab`, then `jarsigner -verify -verbose -certs ...`.
-2. Play work: feature graphic (1024×500) and at least 2 screenshots; verify the claims in
-   `docs/play-listing.md`; Play Console setup; add the Play App Signing SHA-256 to
-   `public/.well-known/assetlinks.json`; closed testing (12 testers / 14 days).
-3. Cleanup: uninstall `com.psymore.metronome.test` from the phone; decide on the untracked
-   `docs/play-assets/icon-candidates/` and `icon-candidates.zip`; local branches
-   `chore/package-id-egeozel` and `feat/brighter-dial` are merged and can be deleted.
+1. Play Console: create the app, paste the listing texts from `docs/play-listing.md` (check
+   each feature line against the live app first), upload the feature graphics and screenshots
+   per language, upload `android/app-release-bundle.aab`.
+2. After the first upload, add the Play App Signing SHA-256 to
+   `public/.well-known/assetlinks.json` (keep the upload-key one), push, verify.
+3. Closed testing: 12 testers for 14 days before production access.
+4. Cleanup: decide on the untracked `docs/play-assets/icon-candidates/`, `icon-candidates.zip`
+   and `android/app-release.apks`; delete merged local branches `chore/package-id-egeozel` and
+   `feat/brighter-dial`.
 
 ## Standing instructions
 
+- Reply to the user in Turkish; code, commits and comments stay English.
 - Never use git worktrees. No `Co-Authored-By` lines in commits.
 - Run lint, tests and build before any push. Ask before push, merge, or remote changes.
 - Never run `bubblewrap update`: it wipes the launcher icon, the debug buildType and the
   scripted splash.
-- The keystore password never goes into the chat; the user signs the AAB.
-- Test phone: Redmi Note 10 Pro (MIUI 14, Android 13). `adb install` sometimes fails with
-  `INSTALL_FAILED_USER_RESTRICTED`: enable "Install via USB" and tap the on-phone prompt quickly.
+- The keystore password never goes into the chat; the user signs the AAB
+  (`C:\Program Files\Java\jdk-17.0.1\bin\jarsigner.exe`, keystore
+  `C:\Users\4D\Keystores\metronome\release.keystore`, alias `metronome`).
+- Test phone: Redmi Note 10 Pro (MIUI 14, Android 13), 1080×2400. `adb install` sometimes fails
+  with `INSTALL_FAILED_USER_RESTRICTED`: enable "Install via USB" and tap the on-phone prompt.
+  For long adb sessions use `adb shell svc power stayon usb` and restore
+  `settings put global stay_on_while_plugged_in 0` afterwards.
 - In Git Bash, prefix adb commands that take device paths with `MSYS_NO_PATHCONV=1`.
 - Keep turns economical; no reflexive test/build runs for tiny changes.
