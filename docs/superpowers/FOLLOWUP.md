@@ -15,8 +15,10 @@ Both branches are merged into `master` and pushed (`cbc4dd3`); Vercel is live wi
 - Knob art (`scripts/knob-art.cjs` + `scripts/knob-art.html`, `KnobDeps.bare`): renders the real
   knob in headless Chrome (needs `npm run dev`) into the launch splash (5 densities),
   `public/boot-knob.webp` (boot loader), `public/splash-icon-*`, launcher mipmaps, and the Play
-  icon (`android/store_icon.png`, `docs/play-assets/play-store-icon-512.png`). Re-run it after
-  any knob change. `android-icons.cjs` and `boot-knob.cjs/.svg` were removed.
+  icon (`android/store_icon.png`, `docs/play-assets/play-store-icon-512.png`), and the web and
+  Windows icons: favicon, `pwa-*` and `src-tauri/icons/*` use the bare knob with no halo (user's
+  choice); maskable and apple-touch use the launcher art on black. Re-run it after any knob
+  change. `pwa-assets.config.ts` and `@vite-pwa/assets-generator` were removed. `android-icons.cjs` and `boot-knob.cjs/.svg` were removed.
 - Splash and boot loader measured on the phone from a screen recording: same size and centre.
   Remaining Chrome-side behaviour: a ~0.5 s blank between splash and loader while Chrome slides
   in, and the loader starts ~28 dp high for a moment while Chrome settles the viewport. Recheck
@@ -36,13 +38,10 @@ flag back to Default.
    C:\Users\4D\Keystores\metronome\release.keystore
    android\app\build\outputs\bundle\release\app-release.aab metronome -signedjar
    android\app-release-bundle.aab`, then `jarsigner -verify -verbose -certs ...`.
-2. Open question to the user: should web/PWA icons (favicon, `pwa-*`, maskable,
-   apple-touch) and the Tauri icons also move to the new knob? They still come from
-   `public/icon.svg`. If yes, extend `scripts/knob-art.cjs`.
-3. Play work: feature graphic (1024×500) and at least 2 screenshots; verify the claims in
+2. Play work: feature graphic (1024×500) and at least 2 screenshots; verify the claims in
    `docs/play-listing.md`; Play Console setup; add the Play App Signing SHA-256 to
    `public/.well-known/assetlinks.json`; closed testing (12 testers / 14 days).
-4. Cleanup: uninstall `com.psymore.metronome.test` from the phone; decide on the untracked
+3. Cleanup: uninstall `com.psymore.metronome.test` from the phone; decide on the untracked
    `docs/play-assets/icon-candidates/` and `icon-candidates.zip`; local branches
    `chore/package-id-egeozel` and `feat/brighter-dial` are merged and can be deleted.
 

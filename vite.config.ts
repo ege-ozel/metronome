@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'pwa-192x192.png'],
       // The 192/512 icons are knob-only on transparent: Chrome centres one of these on the
       // background_color for the installed-PWA splash, and a full-bleed tile shows as a box.
       manifest: {

@@ -92,6 +92,6 @@ Soru ve geri bildirim: egeozeldev@gmail.com
 
 | Asset | Size | Source |
 |---|---|---|
-| App icon | 512 x 512 PNG | `public/pwa-512x512.png` (already full-bleed) |
+| App icon | 512 x 512 PNG | `docs/play-assets/play-store-icon-512.png` (from `scripts/knob-art.cjs`) |
 | Feature graphic | 1024 x 500 PNG/JPG | to design |
 | Phone screenshots | min 2, 16:9 or 9:16, 320-3840 px | capture from the live app |

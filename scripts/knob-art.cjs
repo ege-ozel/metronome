@@ -8,6 +8,10 @@
 //                                            launcher icon (legacy and adaptive foreground)
 //   android/store_icon.png, docs/play-assets/play-store-icon-512.png
 //                                            Play Store icon: the launcher knob on black
+//   public/favicon.ico, pwa-*.png, src-tauri/icons/*
+//                                            favicon, PWA and Windows icons: bare knob, no halo
+//   public/maskable-icon-512x512.png, apple-touch-icon-180x180.png
+//                                            opaque PWA icons: the launcher knob on black
 // Every image uses the same 500-unit frame (knob outer radius 200), so the 216 dp splash and the
 // 216 px loader line up exactly. Needs the dev server (npm run dev) and Chrome; run from the repo
 // root after changing the knob:  node scripts/knob-art.cjs
@@ -154,7 +158,45 @@ async function main() {
   fs.mkdirSync('docs/play-assets', { recursive: true });
   fs.writeFileSync('docs/play-assets/play-store-icon-512.png', play);
 
-  console.log('boot loader, splash, launcher and Play icons written');
+  // Favicon, plain PWA icons and the Windows app icon: the bare knob, no halo (at small sizes the
+  // halo reads as a blurry shadow).
+  const square = (input, px) => sharp(input).resize(px, px).png({ compressionLevel: 9 });
+  for (const px of [64, 192, 512]) await square(bare, px).toFile(`public/pwa-${px}x${px}.png`);
+  const icoSizes = [16, 32, 48];
+  const icoPngs = await Promise.all(icoSizes.map((px) => square(bare, px).toBuffer()));
+  fs.writeFileSync('public/favicon.ico', toIco(icoPngs, icoSizes));
+
+  // Maskable (Android-installed PWA) and Apple touch icons must be opaque squares: the launcher
+  // art on black, like the Android launcher. At 0.8 the halo stays inside the maskable safe circle.
+  await (await placed(launcher, 512, 0.8, black)).toFile('public/maskable-icon-512x512.png');
+  await (await placed(launcher, 180, 0.86, black)).toFile('public/apple-touch-icon-180x180.png');
+
+  // Tauri (Windows) icons: `tauri icon` builds icon.ico and the PNG set from one large source.
+  const tauriSource = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'knob-art-')), 'icon.png');
+  await square(bare, 1024).toFile(tauriSource);
+  execFileSync('npx', ['tauri', 'icon', `"${tauriSource}"`], { stdio: 'inherit', shell: true });
+
+  console.log('boot loader, splash, launcher, Play, web and Windows icons written');
+}
+
+// A PNG-compressed .ico (supported by every current browser and Windows Vista+).
+function toIco(pngs, sizes) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(pngs.length, 4);
+  let offset = 6 + 16 * pngs.length;
+  const entries = pngs.map((png, i) => {
+    const entry = Buffer.alloc(16);
+    entry.writeUInt8(sizes[i] % 256, 0);
+    entry.writeUInt8(sizes[i] % 256, 1);
+    entry.writeUInt16LE(1, 4); // colour planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(png.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    offset += png.length;
+    return entry;
+  });
+  return Buffer.concat([header, ...entries, ...pngs]);
 }
 
 main().catch((error) => {
