@@ -160,16 +160,26 @@ async function main() {
 
   // Favicon, plain PWA icons and the Windows app icon: the bare knob, no halo (at small sizes the
   // halo reads as a blurry shadow).
+  // The service worker precaches public/: a palette PNG is about a quarter of the size and looks
+  // the same at icon sizes.
+  const webPng = { palette: true, quality: 95, effort: 10, compressionLevel: 9 };
   const square = (input, px) => sharp(input).resize(px, px).png({ compressionLevel: 9 });
-  for (const px of [64, 192, 512]) await square(bare, px).toFile(`public/pwa-${px}x${px}.png`);
+  for (const px of [64, 192, 512]) {
+    await sharp(bare).resize(px, px).png(webPng).toFile(`public/pwa-${px}x${px}.png`);
+  }
   const icoSizes = [16, 32, 48];
   const icoPngs = await Promise.all(icoSizes.map((px) => square(bare, px).toBuffer()));
   fs.writeFileSync('public/favicon.ico', toIco(icoPngs, icoSizes));
 
   // Maskable (Android-installed PWA) and Apple touch icons must be opaque squares: the launcher
   // art on black, like the Android launcher. At 0.8 the halo stays inside the maskable safe circle.
-  await (await placed(launcher, 512, 0.8, black)).toFile('public/maskable-icon-512x512.png');
-  await (await placed(launcher, 180, 0.86, black)).toFile('public/apple-touch-icon-180x180.png');
+  for (const [file, px, scale] of [
+    ['maskable-icon-512x512', 512, 0.8],
+    ['apple-touch-icon-180x180', 180, 0.86],
+  ]) {
+    const icon = await (await placed(launcher, px, scale, black)).toBuffer();
+    await sharp(icon).png(webPng).toFile(`public/${file}.png`);
+  }
 
   // Tauri (Windows) icons: `tauri icon` builds icon.ico and the PNG set from one large source.
   const tauriSource = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'knob-art-')), 'icon.png');
