@@ -139,3 +139,84 @@ export function renderMetalTexture(
   ctx.restore();
   return canvas;
 }
+
+/** One colour band of a banded knob ring: its metal stops, and where its outer edge sits as a
+ *  fraction of the ring (0 = the LCD's edge, 1 = the ring's rim). */
+export interface MetalBand {
+  stops: MetalStops;
+  outerEdge: number;
+  /** Half the width of the blend into the band outside it, as a fraction of the ring. */
+  seam?: number;
+}
+
+/** Default half-width of the soft seam between two bands, as a fraction of the ring's width. */
+const BAND_SEAM = 0.05;
+
+/**
+ * The knob ring in concentric colour bands: the first band fills the whole disc, and each later
+ * one is the same brushed metal in its own colours, faded in up to its outer edge with a short
+ * soft seam. Built once like renderMetalTexture (the knob caches it), so the bands add nothing
+ * per frame. `innerRadius` is where the ring starts (the LCD's edge), in the same units as radius.
+ */
+export function renderBandedMetalTexture(
+  radius: number,
+  innerRadius: number,
+  dpr: number,
+  bands: readonly MetalBand[],
+  finish: MetalFinish,
+): OffscreenCanvas | HTMLCanvasElement {
+  const base = renderMetalTexture(radius, dpr, bands[0].stops, finish);
+  const baseCtx = base.getContext('2d') as CanvasRenderingContext2D | null;
+  if (!baseCtx) return base;
+  const center = radius * dpr;
+  const ringWidth = (radius - innerRadius) * dpr;
+  for (const band of bands.slice(1)) {
+    const layer = renderMetalTexture(radius, dpr, band.stops, finish);
+    const ctx = layer.getContext('2d') as CanvasRenderingContext2D | null;
+    if (!ctx) continue;
+    const edge = innerRadius * dpr + band.outerEdge * ringWidth;
+    const seam = (band.seam ?? BAND_SEAM) * ringWidth;
+    const outer = edge + seam;
+    const mask = ctx.createRadialGradient(center, center, 0, center, center, outer);
+    mask.addColorStop(0, '#000');
+    // A smoothstep fade across the seam, so a wide blend has no visible start or end.
+    const steps = 8;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const alpha = 1 - t * t * (3 - 2 * t);
+      const at = Math.min(1, Math.max(0, (edge - seam + 2 * seam * t) / outer));
+      mask.addColorStop(at, `rgba(0, 0, 0, ${alpha.toFixed(3)})`);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = mask;
+    ctx.fillRect(0, 0, layer.width, layer.height);
+    baseCtx.save();
+    baseCtx.setTransform(1, 0, 0, 1, 0, 0);
+    baseCtx.drawImage(layer, 0, 0);
+    baseCtx.restore();
+  }
+  return base;
+}
+
+/** The knob's conic metal pattern in one set of hi/mid/lo colours. */
+export function metalStops(hi: string, mid: string, lo: string): MetalStops {
+  return [
+    [0.0, lo],
+    [0.18, hi],
+    [0.35, lo],
+    [0.52, mid],
+    [0.7, hi],
+    [0.88, lo],
+    [1.0, lo],
+  ];
+}
+
+/** Stops for an extra ring band from `--knob-<name>-hi/mid/lo`, or null when the theme has none. */
+export function bandStops(el: Element, name: string): MetalStops | null {
+  const css = getComputedStyle(el);
+  const hi = css.getPropertyValue(`--knob-${name}-hi`).trim();
+  const mid = css.getPropertyValue(`--knob-${name}-mid`).trim();
+  const lo = css.getPropertyValue(`--knob-${name}-lo`).trim();
+  return hi && mid && lo ? metalStops(hi, mid, lo) : null;
+}

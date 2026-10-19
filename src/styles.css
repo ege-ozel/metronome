@@ -216,37 +216,44 @@
   --knob-metal-hi: #ffc489;
   --knob-metal-mid: #ee9448;
   --knob-metal-lo: #b9631f;
+  /* The ring blends smoothly from the orange above at the rim to the page background at the LCD
+     edge (src/ui/knob.ts, renderBandedMetalTexture). */
+  --knob-inner-hi: #f7f3e8;
+  --knob-inner-mid: #ece6d6;
+  --knob-inner-lo: #b8ad94;
   --knob-brass: #ffcf9a;
 
-  /* Teal text darkened from #147765: 5.25:1 on the bg (was 3.57:1). */
-  --pink: #0f5f52;
-  --pink-soft: rgb(15 95 82 / 0.18);
-  --select: #0f5f52;
-  --select-soft: rgb(15 95 82 / 0.16);
-  --brass: #1b8872;
-  --brass-soft: rgb(27 136 114 / 0.2);
-  --copper: #0e5d50;
+  /* Accent family in the amber theme's hue, deepened to read as ink on paper (like the dial and
+     knob): #8a5214 is 4.9:1 on the bg and 6.3:1 on the panel. */
+  --pink: #8a5214;
+  --pink-soft: rgb(138 82 20 / 0.18);
+  --select: #8a5214;
+  --select-soft: rgb(138 82 20 / 0.16);
+  --brass: #b07a30;
+  --brass-soft: rgb(176 122 48 / 0.2);
+  --copper: #7a4710;
   --viz-ring: #bdb296;
   /* Spokes and Line-view dividers, strengthened from #d8dfda so they read on the cooler bg. */
   --viz-spoke: #c4b9a0;
-  /* On paper the beat levels run as an ink ladder: faded mute, a mid teal normal, a deeper medium
-     (mixed from these two) and the deepest accent. The beat kits in viz/nodeStyleKit.ts derive
-     every highlight and shade from these, so this recolors all styles and their menu previews.
-     White Classic labels on the normal teal are 4:1, with their dark halo on top. */
-  --viz-node: #4f8a7c;
-  --viz-accent: #0a3d35;
-  --viz-accent-alt: #ad7028;
-  --viz-node-alt: #9a6424;
+  /* On paper the beat levels run as an ink ladder: faded mute, a mid amber normal, a deeper
+     medium (mixed from these two) and the deepest accent, in the amber theme's hue so the dial
+     matches the orange knob. The beat kits in viz/nodeStyleKit.ts derive every highlight and
+     shade from these, so this recolors all styles and their menu previews. The second poly layer
+     swaps to teal, as amber's does. */
+  --viz-node: #b07a30;
+  --viz-accent: #6b4012;
+  --viz-accent-alt: #0f5f52;
+  --viz-node-alt: #4f8a7c;
   /* Muted beats are drawn from this. A warm grey-brown ink, 3.9:1 on the paper bg and 4.8:1 on
      the panel, so a muted beat reads as a quiet mark rather than vanishing into the page. */
   --viz-node-idle: #7a705c;
-  --viz-hand: #0f5f52;
+  --viz-hand: #9a6424;
   --viz-label: #5c5444;
-  --viz-glow: #1b8872;
+  --viz-glow: #d99a3f;
   --viz-core: #fffdf6;
   --viz-poly-line-width: 3.5;
   --viz-subfan-fill: rgb(255 253 246 / 0.76);
-  --accent-idle: rgb(15 95 82 / 0.16);
+  --accent-idle: rgb(138 82 20 / 0.16);
   --confirm-safe: #19734a;
   --confirm-danger: #b42318;
   --confirm-warn: #8a5b00;
@@ -697,6 +704,15 @@ output {
   }
 }
 .bar-counter[hidden] {
+  display: none;
+}
+/* The repeat count, on the pill's top-right corner like the subdivision badge on the signature
+   button. The pill is the wrap's last item, so the wrap's corner is the pill's corner. */
+.loop-badge {
+  z-index: 2;
+  pointer-events: none;
+}
+.loop-badge[hidden] {
   display: none;
 }
 
@@ -3250,10 +3266,10 @@ html.depth-25d .knob {
   filter: grayscale(1) brightness(2.1) contrast(0.8);
 }
 :root[data-theme="light"] .knob {
-  filter: drop-shadow(0 8px 14px rgb(38 75 63 / 0.22));
+  filter: drop-shadow(0 8px 14px rgb(90 55 20 / 0.22));
 }
 :root[data-theme="light"] .nudge {
-  border-color: #c9bfa8;
+  border-color: #d9b38c;
   background:
     radial-gradient(circle at 33% 28%, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0) 42%),
     repeating-radial-gradient(
@@ -3263,8 +3279,9 @@ html.depth-25d .knob {
       rgb(48 58 63 / 0.06) 0.6px,
       rgb(48 58 63 / 0.06) 1.6px
     ),
-    conic-gradient(from 210deg, #8a8170, #f6f2e8, #c9bfa8, #f6f2e8, #8a8170, #8a8170);
-  color: #3b382b;
+    /* A light touch of the knob's orange (--knob-metal-*), so the buttons match the knob ring. */
+    conic-gradient(from 210deg, #b07a4c, #fbe9d4, #e6b386, #fbe9d4, #b07a4c, #b07a4c);
+  color: #5a3517;
   text-shadow:
     0 1px 1px rgb(255 255 255 / 0.8),
     0 0 2px rgb(35 45 50 / 0.2);

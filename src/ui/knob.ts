@@ -2,7 +2,13 @@ import { t } from '../i18n/i18n';
 import type { Settings } from '../state/settings';
 import type { Store } from '../state/store';
 import { angleDelta, bpmAfterRotation } from './dialMath';
-import { renderMetalTexture } from './metalTexture';
+import {
+  bandStops,
+  type MetalStops,
+  metalStops,
+  renderBandedMetalTexture,
+  renderMetalTexture,
+} from './metalTexture';
 
 export { conicOrLinearGradient } from './metalTexture';
 
@@ -10,34 +16,17 @@ export { conicOrLinearGradient } from './metalTexture';
  * Builds stop colors by reading the current --brass/--select/--copper CSS variables from the
  * knob canvas element so the metal tint always tracks the active UI theme.
  */
-function themeMatchStops(el: Element): readonly [number, string][] {
+function themeMatchStops(el: Element): MetalStops {
   const css = getComputedStyle(el);
   const metalHi = css.getPropertyValue('--knob-metal-hi').trim();
   const metalMid = css.getPropertyValue('--knob-metal-mid').trim();
   const metalLo = css.getPropertyValue('--knob-metal-lo').trim();
-  if (metalHi && metalMid && metalLo) {
-    return [
-      [0.0, metalLo],
-      [0.18, metalHi],
-      [0.35, metalLo],
-      [0.52, metalMid],
-      [0.7, metalHi],
-      [0.88, metalLo],
-      [1.0, metalLo],
-    ];
-  }
-  const hi = css.getPropertyValue('--brass').trim() || '#7fe0bb';
-  const mid = css.getPropertyValue('--select').trim() || '#4fb894';
-  const lo = css.getPropertyValue('--copper').trim() || '#2f7a5f';
-  return [
-    [0.0, lo],
-    [0.18, hi],
-    [0.35, lo],
-    [0.52, mid],
-    [0.7, hi],
-    [0.88, lo],
-    [1.0, lo],
-  ];
+  if (metalHi && metalMid && metalLo) return metalStops(metalHi, metalMid, metalLo);
+  return metalStops(
+    css.getPropertyValue('--brass').trim() || '#7fe0bb',
+    css.getPropertyValue('--select').trim() || '#4fb894',
+    css.getPropertyValue('--copper').trim() || '#2f7a5f',
+  );
 }
 
 /** The LCD face is a dark brushed-metal disc (same conic + machined-groove texture as the knob
@@ -269,7 +258,22 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
       return;
     assetsFor = { radius: g.outerRadius, tilted: g.tilted, themeName: currentThemeName };
     const stops = themeMatchStops(canvas);
-    metalTexture = renderMetalTexture(g.innerRadius, dpr, stops, theme.light ? 'light' : 'vivid');
+    const finish = theme.light ? 'light' : 'vivid';
+    // A theme that defines an inner band (the light theme) gets a ring that blends smoothly from
+    // its own metal at the rim to the inner band's at the LCD edge.
+    const inner = bandStops(canvas, 'inner');
+    metalTexture = inner
+      ? renderBandedMetalTexture(
+          g.innerRadius,
+          g.coreRadius,
+          dpr,
+          [
+            { stops, outerEdge: 1 },
+            { stops: inner, outerEdge: 0.5, seam: 0.4 },
+          ],
+          finish,
+        )
+      : renderMetalTexture(g.innerRadius, dpr, stops, finish);
     teethRing = SHOW_TEETH ? renderTeethRing(g.outerRadius, g.toothDepth, TOOTH_COUNT, dpr) : null;
     lcdTexture = renderMetalTexture(g.coreRadius, dpr, lcdStops(canvas), 'dark');
     sideWall = g.tilted
