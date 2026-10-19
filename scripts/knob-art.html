@@ -40,6 +40,8 @@
         isRunning: () => false,
         toggle: () => {},
         bare: true,
+        // ?noshadow: the small icons (favicon, PWA, Windows) leave out the pin's cast shadow.
+        noPinShadow: new URLSearchParams(location.search).has('noshadow'),
       });
       document.documentElement.dataset.ready = 'true';
     </script>

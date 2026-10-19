@@ -54,6 +54,9 @@ export interface KnobDeps {
   /** Draws the knob without its readout (BPM, label, play icon): used by scripts/knob-art.html
    *  to render the launch splash and boot loader art from the real knob. */
   bare?: boolean;
+  /** Leaves out the pin's cast shadow: used for the small icons (favicon, PWA, Windows), where
+   *  it reads as a smudge. */
+  noPinShadow?: boolean;
 }
 
 export interface Knob {
@@ -419,11 +422,14 @@ export function mountKnob(canvas: HTMLCanvasElement, deps: KnobDeps): Knob {
     const sIn = raise(ridgeIn, heightIn, 0.55, 0.55);
     const sOut = raise(ridgeOut, heightOut, 0.55, 0.55);
     c2d.fillStyle = theme.light ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.4)';
-    for (const face of [
-      [baseInL, baseOutL, sOut, sIn],
-      [baseInR, baseOutR, sOut, sIn],
-      [baseInL, baseInR, sIn],
-    ]) {
+    const shadowFaces = deps.noPinShadow
+      ? []
+      : [
+          [baseInL, baseOutL, sOut, sIn],
+          [baseInR, baseOutR, sOut, sIn],
+          [baseInL, baseInR, sIn],
+        ];
+    for (const face of shadowFaces) {
       poly(face);
       c2d.fill();
     }

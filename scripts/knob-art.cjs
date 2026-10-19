@@ -35,7 +35,7 @@ const glyphSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 6 500 500">
 const haloSvg = (inner, outer) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 6 500 500"><defs><radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0.74" stop-color="#7fe0bb" stop-opacity="${inner}"/><stop offset="0.84" stop-color="#7fe0bb" stop-opacity="${outer}"/><stop offset="1" stop-color="#7fe0bb" stop-opacity="0"/></radialGradient></defs><circle cx="256" cy="256" r="250" fill="url(#glow)"/></svg>`;
 
-function screenshotKnob() {
+function screenshotKnob(url = URL) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'knob-art-'));
   const out = path.join(dir, 'knob.png');
   execFileSync(
@@ -49,16 +49,19 @@ function screenshotKnob() {
       '--virtual-time-budget=8000',
       `--user-data-dir=${path.join(dir, 'profile')}`,
       `--screenshot=${out}`,
-      URL,
+      url,
     ],
     { stdio: 'ignore' },
   );
-  if (!fs.existsSync(out)) throw new Error(`No screenshot from ${URL}: is the dev server running?`);
+  if (!fs.existsSync(out)) throw new Error(`No screenshot from ${url}: is the dev server running?`);
   return fs.readFileSync(out);
 }
 
 async function main() {
   const knob = screenshotKnob(); // 1000 px (the knob caps its pixel ratio at 2), transparent around it
+  // The small icons (favicon, PWA, Windows, legacy launcher) leave out the pin's cast shadow:
+  // at those sizes it reads as a smudge next to the pin.
+  const knobNoShadow = screenshotKnob(`${URL}?noshadow`);
   const size = (await sharp(knob).metadata()).width;
   const svgAt = (svg) =>
     sharp(Buffer.from(svg), { density: (72 * size) / 500 })
@@ -121,7 +124,7 @@ async function main() {
 
   // Legacy launcher icon (Android 5 to 7): the bare knob filling the icon (the 432-unit window
   // around it, as in public/icon.svg).
-  const knobWithGlyph = await sharp(knob)
+  const knobWithGlyph = await sharp(knobNoShadow)
     .composite([{ input: glyph }])
     .png()
     .toBuffer();
