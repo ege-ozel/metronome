@@ -1,5 +1,5 @@
 // Delete button: inline confirm pattern — first click splits to [ ✕ | ✓ ],
-// ✓ runs onConfirm, ✕ or timeout resets button. Shared by the practice timer's trash button, the
+// ✓ runs onConfirm, ✕ resets the button (no timeout: it waits for the user). Shared by the practice timer's trash button, the
 // smaller one beside the loop pill, and saved sound presets.
 export function mountDeleteConfirm(deleteBtn: HTMLButtonElement, onConfirm: () => void): void {
   let deleteState: 'idle' | 'confirming' | 'closing' = 'idle';
@@ -49,8 +49,6 @@ export function mountDeleteConfirm(deleteBtn: HTMLButtonElement, onConfirm: () =
       deleteBtn.innerHTML = '';
       deleteBtn.appendChild(cancelBtn);
       deleteBtn.appendChild(confirmBtn);
-
-      deleteTimeout = setTimeout(resetDeleteBtn, 3000);
     }
   });
 }

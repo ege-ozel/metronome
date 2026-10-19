@@ -116,10 +116,11 @@ export function mountMenuDrawer({ store }: { store: Store<Settings> }): void {
 
   // Swipe left on the open drawer drags it 1:1 with the finger (the drawer slides in from the
   // left), then on release either finishes closing or springs back open, whichever side of the
-  // 50% mark it's past — the standard drawer/sheet commit threshold. Ignored when the gesture
+  // CLOSE_FRACTION mark it's past (16% of its width, a short flick). Ignored when the gesture
   // starts on a range input, so dragging the sync-offset slider left still moves the slider.
   // Opening stays button-only — see the .drawer note in styles.css.
   const DRAG_LOCK_PX = 8;
+  const CLOSE_FRACTION = 0.16;
   let swipeStart: { x: number; y: number } | null = null;
   let dragging = false;
   let drawerWidth = 0;
@@ -204,7 +205,7 @@ export function mountMenuDrawer({ store }: { store: Store<Settings> }): void {
       suppressNextClick = true;
     }
     if (!wasDragging) return;
-    if (Math.abs(dx) > drawerWidth * 0.3) finishDragClose();
+    if (Math.abs(dx) > drawerWidth * CLOSE_FRACTION) finishDragClose();
     else snapOpen();
   });
   drawer.addEventListener('pointercancel', () => {

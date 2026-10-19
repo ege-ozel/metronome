@@ -8,7 +8,7 @@ import { mountIntegerInput } from './numericInput';
 
 export interface PracticeTimerDialogDeps {
   store: Store<Settings>;
-  /** Called after the user confirms starting a practice session from the dialog. */
+  /** Called when the user taps Start in the dialog. */
   onStartPractice: () => void;
 }
 
@@ -27,27 +27,13 @@ export function mountPracticeTimerDialog({
   const practiceTimeUp = byId<HTMLButtonElement>('practiceTimeUp');
   const practiceTimerApply = byId<HTMLButtonElement>('practiceTimerApply');
 
-  let confirmState: 'idle' | 'confirming' = 'idle';
-  let confirmTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  const resetConfirm = (): void => {
-    clearTimeout(confirmTimeout);
-    confirmTimeout = undefined;
-    confirmState = 'idle';
-    practiceTimerApply.innerHTML = '';
-    practiceTimerApply.textContent = t('practiceTimer.apply');
-    practiceTimerApply.classList.remove('is-confirming');
-  };
-
   byId('timerBtn').addEventListener('click', () => {
-    resetConfirm();
     dialog.showModal();
   });
   closeOnBackdropClick(dialog);
 
   const setPracticeSeconds = (seconds: number): void => {
     store.set({ practiceSeconds: clampPracticeSeconds(seconds) });
-    resetConfirm();
   };
   mountIntegerInput(practiceMinutesInput, (minutes) => {
     const ss = store.get().practiceSeconds % 60;
@@ -63,39 +49,11 @@ export function mountPracticeTimerDialog({
   mountHoldRepeat(practiceTimeUp, () =>
     setPracticeSeconds(store.get().practiceSeconds + PRACTICE_STEP_SECONDS),
   );
+  // One tap starts the session: starting is harmless and easy to undo, unlike a delete.
   practiceTimerApply.addEventListener('click', () => {
     if (store.get().practiceSeconds <= 0) return;
-
-    if (confirmState === 'idle') {
-      confirmState = 'confirming';
-      practiceTimerApply.classList.add('is-confirming');
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.type = 'button';
-      cancelBtn.className = 'confirm-cancel-btn';
-      cancelBtn.textContent = '✕';
-      cancelBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        resetConfirm();
-      });
-
-      const confirmBtn = document.createElement('button');
-      confirmBtn.type = 'button';
-      confirmBtn.className = 'confirm-confirm-btn';
-      confirmBtn.textContent = '✓';
-      confirmBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dialog.close();
-        onStartPractice();
-        resetConfirm();
-      });
-
-      practiceTimerApply.innerHTML = '';
-      practiceTimerApply.appendChild(cancelBtn);
-      practiceTimerApply.appendChild(confirmBtn);
-
-      confirmTimeout = setTimeout(resetConfirm, 3000);
-    }
+    dialog.close();
+    onStartPractice();
   });
 
   const render = (s: Settings) => {

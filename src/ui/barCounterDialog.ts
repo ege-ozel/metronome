@@ -18,13 +18,11 @@ export function mountBarCounterDialog({
   const targetBarsApply = byId<HTMLButtonElement>('targetBarsApply');
   const loopButtons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('[data-loop]'));
 
-  // Same inline confirm as the practice timer's Start: first tap splits Apply into [ ✕ | ✓ ].
+  // Inline confirm (a song length is a critical setting): first tap splits Apply into [ ✕ | ✓ ],
+  // which stays until one is tapped, the length changes, or the dialog reopens.
   let confirmState: 'idle' | 'confirming' = 'idle';
-  let confirmTimeout: ReturnType<typeof setTimeout> | undefined;
 
   const resetConfirm = (): void => {
-    clearTimeout(confirmTimeout);
-    confirmTimeout = undefined;
     confirmState = 'idle';
     targetBarsApply.innerHTML = '';
     targetBarsApply.textContent = t('songLength.apply');
@@ -98,8 +96,6 @@ export function mountBarCounterDialog({
     targetBarsApply.innerHTML = '';
     targetBarsApply.appendChild(cancelBtn);
     targetBarsApply.appendChild(confirmBtn);
-
-    confirmTimeout = setTimeout(resetConfirm, 3000);
   });
 
   for (const button of loopButtons) {

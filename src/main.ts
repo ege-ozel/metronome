@@ -61,9 +61,14 @@ const showIdleBarCounter = (): void => {
   const s = store.get();
   barCounter.textContent = formatIdleBarCounter(s.targetBars, s.loopCount);
 };
-// The small trash beside the loop pill only exists while a loop is actually set.
+// The small trash beside the loop pill only exists while a loop is actually set; the repeat
+// badge on the pill's corner only while that loop repeats (2×, 4×, 8×, ∞).
+const loopBadge = byId('loopBadge');
 const syncBarCounterDelete = (s: Settings): void => {
   barCounterDeleteBtn.hidden = s.targetBars <= 0;
+  const repeats = s.targetBars > 0 && s.loopCount !== 1;
+  loopBadge.hidden = !repeats;
+  loopBadge.textContent = repeats ? (s.loopCount === 0 ? '∞' : `${s.loopCount}×`) : '';
 };
 syncBarCounterDelete(store.get());
 store.subscribe(syncBarCounterDelete);
@@ -361,8 +366,9 @@ function runPracticeCountdown(): void {
 
   practiceEndTimer = setTimeout(() => {
     finishPracticeTimer();
-    // The practice session ending is a cue about time, not a reason to cut the beat off
-    // mid-bar — the metronome keeps playing until the player stops it themselves.
+    // The session is over: stop the metronome, as the timer's hint promises. finishPracticeTimer
+    // runs first, so onToggle sees a finished timer and leaves its replay state alone.
+    if (engine.running) void transport.toggle();
     if (store.get().haptics && navigator.vibrate) navigator.vibrate([20, 40, 20]);
   }, remainingSeconds * 1000);
 }
@@ -478,13 +484,6 @@ const transport = mountTransport({
     }
   },
 });
-// Changing the practice length mid-session restarts the countdown (and its fade) from now,
-// instead of waiting for a stop/start to pick up the new value.
-store.subscribe((s, prev) => {
-  if (s.practiceSeconds !== prev.practiceSeconds && engine.running) {
-    startPracticeTimer(s.practiceSeconds);
-  }
-});
 
 const knob = mountKnob(byId<HTMLCanvasElement>('knob'), {
   store,
@@ -511,10 +510,13 @@ mountPolyrhythmControls({ store });
 mountBarCounterDialog({ store, toast });
 mountPracticeTimerDialog({
   store,
+  // Only Start applies a new length: editing it in the dialog leaves a running timer alone.
   onStartPractice: () => {
     if (engine.running) {
       startPracticeTimer(store.get().practiceSeconds);
     } else {
+      // Clear a finished timer first, or onToggle would keep it at rest instead of starting.
+      stopPracticeTimer();
       void transport.toggle();
     }
   },
