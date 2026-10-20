@@ -40,9 +40,12 @@ index `u/2`; account ID 8773423919003016698, app ID 4975519516990501530):
 1. Phone check: done (2026-10-20). Installed from Play via the opt-in link; the app opens full
    screen with no URL bar, so assetlinks verification passes. One cosmetic issue: the system
    navigation bar at the bottom is white with dark buttons, though `twa-manifest.json` and
-   `build.gradle` ask for `#000000`. The status bar does take its colour. Not yet diagnosed;
-   with the phone on adb, compare with the debug APK and check which colour Chrome sets
-   (`dumpsys window`). Any fix needs a new AAB with a higher `versionCode`.
+   `build.gradle` ask for `#000000`. Diagnosed as Chrome-side: the installed APK carries
+   `navigationColor #ff000000` and the NAVIGATION_BAR_COLOR meta-data correctly, but Chrome
+   155.0.8059.39 leaves its custom-tab window `navigationBarColor=0` (it is edge-to-edge) and
+   paints a light chin. A bare custom tab launched over adb with a red
+   `extra.NAVIGATION_BAR_COLOR` also got a white bar, while its toolbar colour was applied.
+   Nothing to fix in our code for now; recheck after Chrome updates.
 2. Closed testing: the user collects at least 12 testers' Gmail addresses. Create a closed
    testing release (promote build 1) and add the testers. The 14-day clock runs from when at
    least 12 testers have opted in, and the user decides when to start it. That release goes to
