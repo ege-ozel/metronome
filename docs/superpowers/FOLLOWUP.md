@@ -51,12 +51,9 @@ index `u/2`; account ID 8773423919003016698, app ID 4975519516990501530):
    least 12 testers have opted in, and the user decides when to start it. That release goes to
    Google review, so ask before sending it.
 3. After 14 days: apply for production access in Play Console.
-4. Cleanup:
-   - Decide on the untracked `docs/play-assets/icon-candidates/`, `icon-candidates.zip` and
-     `android/app-release.apks`.
-   - Delete the merged local branches `chore/package-id-egeozel` and `feat/brighter-dial`.
-   - The user should set the phone's Chrome flag "Enable command line on non-rooted devices"
-     back to Default.
+4. Cleanup: untracked files and all merged local branches were deleted on 2026-10-20 (only
+   `master` is left locally). Still open: the user should set the phone's Chrome flag "Enable
+   command line on non-rooted devices" back to Default.
 
 ## Browser automation notes (Claude in Chrome on Play Console)
 
