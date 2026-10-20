@@ -37,10 +37,12 @@ index `u/2`; account ID 8773423919003016698, app ID 4975519516990501530):
 
 ## Next step
 
-1. Phone check: open the opt-in link with the Google account that is on the phone. If that is
-   not egeozeldev@gmail.com, add the account to the "Internal testers" list first. Then install
-   from Play and confirm the app opens full screen, with no URL bar. A URL bar means the
-   assetlinks check failed.
+1. Phone check: done (2026-10-20). Installed from Play via the opt-in link; the app opens full
+   screen with no URL bar, so assetlinks verification passes. One cosmetic issue: the system
+   navigation bar at the bottom is white with dark buttons, though `twa-manifest.json` and
+   `build.gradle` ask for `#000000`. The status bar does take its colour. Not yet diagnosed;
+   with the phone on adb, compare with the debug APK and check which colour Chrome sets
+   (`dumpsys window`). Any fix needs a new AAB with a higher `versionCode`.
 2. Closed testing: the user collects at least 12 testers' Gmail addresses. Create a closed
    testing release (promote build 1) and add the testers. The 14-day clock runs from when at
    least 12 testers have opted in, and the user decides when to start it. That release goes to
