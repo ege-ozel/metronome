@@ -28,6 +28,7 @@ FEATURES
 • Tap tempo and a BPM dial with fine nudge buttons
 • Time signature presets and a custom signature editor
 • Subdivisions: eighths, triplets, sixteenths and more
+• Polyrhythms with two layers, each with its own sound
 • Accent, medium and normal beat levels, each with its own volume
 • Bar counter and loop target, plus a practice timer
 • Built-in sound presets, or load your own short audio files
@@ -62,6 +63,7 @@ zaman sıraya alındığına değil, gerçekten duyduğunuz ana göre ilerler.
 • Tap tempo ve ince ayar tuşlarıyla BPM kadranı
 • Ölçü hazır ayarları ve özel ölçü düzenleyici
 • Alt bölümler: sekizlik, üçleme, onaltılık ve daha fazlası
+• İki katmanlı poliritim, her katman kendi sesiyle
 • Vurgu, orta ve normal vuruş seviyeleri, her biri kendi ses düzeyiyle
 • Ölçü sayacı ve döngü hedefi, ayrıca çalışma zamanlayıcısı
 • Hazır ses ayarları ya da kendi kısa ses dosyalarınız
