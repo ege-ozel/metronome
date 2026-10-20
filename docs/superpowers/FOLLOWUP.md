@@ -3,65 +3,83 @@
 If you are a fresh session: read `CLAUDE.md` first, then this file, then act on "Next step"
 immediately.
 
-## Where things stand (2026-10-19)
+## Where things stand (2026-10-20)
 
-`master` is pushed through `b4825eb` and live on Vercel; two later commits (`e1cee83` and this
-note) are local only. Today's work:
+`master` is pushed through `0185361` and live on Vercel. The app is set up in Play Console, and
+build 1 is live on the internal testing track.
 
-- App renamed to **Chronobeat** everywhere visible (header, page title, PWA manifest
-  `Chronobeat: Metronome` / `Chronobeat`, Windows productName, privacy policy). Built-in sound
-  names such as "Metronome Click A" stay as they are.
-- Light theme in amber: knob ring blends from orange at the rim to the page cream at the LCD
-  (`renderBandedMetalTexture` with a smoothstep seam), amber dial nodes, accents and +/- buttons.
-- Small icons (favicon, `pwa-*`, Tauri icons, legacy Android launcher) render the knob without
-  the pin's cast shadow (`KnobDeps.noPinShadow`, `scripts/knob-art.html?noshadow`). The splash,
-  boot loader, adaptive launcher, maskable/apple and Play icons keep the shadow (user's choice:
-  "önemli değil"). Note: re-running `scripts/knob-art.cjs` rewrites every image (random grooves);
-  revert the ones you did not mean to change.
-- Signature button's POLY tag is translated (`viz.poly`, uppercased in CSS: POLY / POLİ).
-  "Bar" stays "Bar" in Turkish and sound names stay English, on purpose.
-- Windows installer rebuilt: `src-tauri/target/release/bundle/nsis/Chronobeat_0.1.0_x64-setup.exe`.
-- Signed release bundle: `android/app-release-bundle.aab` (`com.egeozel.metronome`, versionCode
-  1). It predates the shadowless legacy launcher icon; harmless (Android 5–7 only).
-
-Play assets (all committed, in `docs/play-assets/`):
-- Feature graphic: `feature-graphic-1024x500.png` and `-tr.png`, rendered from
-  `scripts/feature-graphic.html` (`?lang=tr`); the render command is in that file's comment.
-- Phone screenshots: `screenshots/en/` and `screenshots/tr/`, 7 each (circle, poly, light,
-  line, timer, sounds, menu), 1080×2160 with the status and nav bars cropped (Play's 2:1 limit).
-- `docs/play-listing.md` lists them; listing texts are there in English and Turkish.
-
-Phone state: the release TWA (`com.egeozel.metronome`) is no longer installed; the user
-reinstalled the Chrome web app (WebAPK `org.chromium.webapk.a6838f89fc4513e17_v2`). On MIUI,
-`am start` from adb is blocked; launch with `adb shell monkey -p <package> -c
-android.intent.category.LAUNCHER 1`. The Chrome flag "Enable command line on non-rooted
-devices" is still on (shows a warning toast) — the user should set it back to Default.
+Play Console (developer account under **egeozeldev@gmail.com**, which is Chrome's Google user
+index `u/2`; account ID 8773423919003016698, app ID 4975519516990501530):
+- App "Chronobeat: Metronome", package `com.egeozel.metronome`, free, category Music & Audio.
+  Contact egeozeldev@gmail.com; website is the Vercel URL.
+- App content declarations are all done:
+  - privacy policy URL
+  - no sign-in needed
+  - no ads, no advertising ID
+  - content rating via IARC: Everyone / PEGI 3 / all ages
+  - target audience 13–15, 16–17 and 18+ (no under-13s, to stay out of the Families policy)
+  - data safety: nothing collected or shared
+  - not a government app, no financial or health features (the user filled in health)
+- Store listing (draft, saved):
+  - en-US default: texts, icon, feature graphic, 7 screenshots.
+  - tr-TR: Turkish texts, Turkish feature graphic, 7 Turkish screenshots.
+  - Screenshot order is circle, poly, light, line, timer, sounds, menu.
+- **Automatic protection (installer check) is turned off.** It needs minSdk 24 and our AAB is
+  minSdk 21; the user chose to switch the protection off rather than drop Android 5–6.
+- Play App Signing is on. The app signing key SHA-256 (`66:13:55:84…`) is now in
+  `public/.well-known/assetlinks.json` next to the upload key (`6F:13:77:4F…`), and is live on
+  Vercel (verified with curl).
+- Internal testing: release `1 (1)` (`android/app-release-bundle.aab`) is published. The testers
+  list "Internal testers" holds egeozeldev@gmail.com only. The opt-in link is
+  https://play.google.com/apps/internaltest/4701171416306128446. Until review, testers see the
+  temporary name "com.egeozel.metronome (unreviewed)".
+- `docs/play-listing.md` gained a polyrhythm bullet (EN and TR); the Play listing has it too.
 
 ## Next step
 
-1. Play Console: create the app, paste the listing texts from `docs/play-listing.md` (check
-   each feature line against the live app first), upload the feature graphics and screenshots
-   per language, upload `android/app-release-bundle.aab`.
-2. After the first upload, add the Play App Signing SHA-256 to
-   `public/.well-known/assetlinks.json` (keep the upload-key one), push, verify.
-3. Closed testing: 12 testers for 14 days before production access.
-4. Cleanup: decide on the untracked `docs/play-assets/icon-candidates/`, `icon-candidates.zip`
-   and `android/app-release.apks`; delete merged local branches `chore/package-id-egeozel` and
-   `feat/brighter-dial`.
+1. Phone check: open the opt-in link with the Google account that is on the phone. If that is
+   not egeozeldev@gmail.com, add the account to the "Internal testers" list first. Then install
+   from Play and confirm the app opens full screen, with no URL bar. A URL bar means the
+   assetlinks check failed.
+2. Closed testing: the user collects at least 12 testers' Gmail addresses. Create a closed
+   testing release (promote build 1) and add the testers. The 14-day clock runs from when at
+   least 12 testers have opted in, and the user decides when to start it. That release goes to
+   Google review, so ask before sending it.
+3. After 14 days: apply for production access in Play Console.
+4. Cleanup:
+   - Decide on the untracked `docs/play-assets/icon-candidates/`, `icon-candidates.zip` and
+     `android/app-release.apks`.
+   - Delete the merged local branches `chore/package-id-egeozel` and `feat/brighter-dial`.
+   - The user should set the phone's Chrome flag "Enable command line on non-rooted devices"
+     back to Default.
+
+## Browser automation notes (Claude in Chrome on Play Console)
+
+- `ctrl+a` in an empty Play Console field types a literal "a"; check field values with
+  `javascript_tool` after typing.
+- The page can scroll between a click and a typed string. Click the field right before typing,
+  then verify.
+- Asset uploads go through the asset-library side panel. Use `file_upload` on its hidden file
+  input, then press "Add". Screenshots land in an odd order; fix the order by dragging the
+  thumbnails.
 
 ## Standing instructions
 
 - Reply to the user in Turkish; code, commits and comments stay English.
 - Never use git worktrees. No `Co-Authored-By` lines in commits.
 - Run lint, tests and build before any push. Ask before push, merge, or remote changes.
+- Ask before any Play Console step that sends something to review, publishes, or accepts terms.
 - Never run `bubblewrap update`: it wipes the launcher icon, the debug buildType and the
   scripted splash.
-- The keystore password never goes into the chat; the user signs the AAB
-  (`C:\Program Files\Java\jdk-17.0.1\bin\jarsigner.exe`, keystore
-  `C:\Users\4D\Keystores\metronome\release.keystore`, alias `metronome`).
-- Test phone: Redmi Note 10 Pro (MIUI 14, Android 13), 1080×2400. `adb install` sometimes fails
-  with `INSTALL_FAILED_USER_RESTRICTED`: enable "Install via USB" and tap the on-phone prompt.
-  For long adb sessions use `adb shell svc power stayon usb` and restore
-  `settings put global stay_on_while_plugged_in 0` afterwards.
+- The keystore password never goes into the chat. The user signs the AAB:
+  - jarsigner: `C:\Program Files\Java\jdk-17.0.1\bin\jarsigner.exe`
+  - keystore: `C:\Users\4D\Keystores\metronome\release.keystore`, alias `metronome`
+  - A new build needs a higher `versionCode` in `android/app/build.gradle`.
+- Test phone:
+  - Redmi Note 10 Pro (MIUI 14, Android 13), 1080×2400.
+  - On MIUI, `am start` from adb is blocked. Launch with
+    `adb shell monkey -p <package> -c android.intent.category.LAUNCHER 1`.
+  - For long adb sessions, run `adb shell svc power stayon usb` and afterwards restore
+    `settings put global stay_on_while_plugged_in 0`.
 - In Git Bash, prefix adb commands that take device paths with `MSYS_NO_PATHCONV=1`.
 - Keep turns economical; no reflexive test/build runs for tiny changes.
